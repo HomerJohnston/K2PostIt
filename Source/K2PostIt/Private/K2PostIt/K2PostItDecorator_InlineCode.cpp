@@ -4,7 +4,10 @@
 
 #include "Fonts/FontMeasure.h"
 #include "Framework/Text/SlateWidgetRun.h"
+#include "K2PostIt/EdGraphNode_K2PostIt.h"
+#include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "Widgets/Text/SRichTextBlock.h"
 
 
 FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(const FTextBlockStyle& Style)
@@ -12,11 +15,11 @@ FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(const FTextBlockSty
 {
 }
 
-FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, const FSlateColor& InColor)
+FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner)
 	: TextStyle(FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal))
 {
 	RunName = InName;
-	Color = InColor;
+	Owner = InOwner;
 }
 
 bool FK2PostItDecorator_InlineCode::Supports(const FTextRunParseResults& RunInfo, const FString& Text) const
@@ -34,9 +37,6 @@ TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<cla
 	{
 		RunInfo.MetaData.Add(Pair.Key, OriginalText.Mid(Pair.Value.BeginIndex, Pair.Value.EndIndex - Pair.Value.BeginIndex));
 	}
-
-//	const FTextBlockStyle& TextStyle = Owner->GetCurrentDefaultTextStyle();
-
 	
 	TSharedPtr<SWidget> DecoratorWidget = CreateDecoratorWidget(RunInfo, TextStyle);
 	
@@ -65,10 +65,66 @@ TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<cla
 
 TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const FTextRunInfo& RunInfo, const FTextBlockStyle& DefaultTextStyle) const
 {
-	return SNew(SBorder)
-		.BorderImage(FAppStyle::GetBrush("ErrorReporting.EmptyBox"))
+	return SNew(SBox)
+	.Padding(2, -3, 2, -3)
+	[
+		SNew(SBorder)
+		.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightFill))
+		.ForegroundColor_Lambda( [this] ()
+		{
+			FLinearColor Color = K2PostItColor::Noir;
+	
+			if (Owner.IsValid())
+			{
+				Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
+			}
+			
+			return Color;
+		})
+		.BorderBackgroundColor_Lambda( [this] ()
+		{
+			FLinearColor Color = K2PostItColor::White;
+	
+			if (Owner.IsValid())
+			{
+				float Alpha = Color.A;
+				Color = Owner->CommentColor * 5;
+				Color.A = Alpha;
+			}
+			
+			return Color;
+		})
+		.Padding(0)
 		[
-			SNew(STextBlock)
-			.Text(RunInfo.Content)
-		];
+			SNew(SBorder)
+			.Padding(3, 1, 3, 1)
+			.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightBorder))
+			.BorderBackgroundColor_Lambda( [this] ()
+			{
+				FLinearColor Color = K2PostItColor::White;
+	
+				if (Owner.IsValid())
+				{
+					float Lum = Owner->CommentColor.GetLuminance() * 1.2 + 0.15;
+					Color = FLinearColor(Lum, Lum, Lum, 1.0f);
+				}
+			
+				return Color;
+			})
+			[
+				SNew(SRichTextBlock)
+				.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_CodeBlock)
+				.DecoratorStyleSet( &FK2PostItStyle::Get() )
+				.Text(RunInfo.Content)
+				.LineHeightPercentage(1.1f)
+				.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
+				.AutoWrapText(true)
+				/*
+				SNew(STextBlock)
+				.TextStyle(&TextStyle)
+				.Text(RunInfo.Content)
+				*/
+			]
+		]
+	];
 }

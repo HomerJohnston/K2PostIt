@@ -15,3 +15,18 @@ FLinearColor K2PostItColor::Darken(FLinearColor InColor, float Darken)
 	
 	return FLinearColor(Darken * Darken * InColor.R, Darken * Darken * InColor.G, Darken * Darken * InColor.B, InColor.A);
 }
+
+const FLinearColor K2PostItColor::GetNominalFontColor(FLinearColor NodeColor, FLinearColor DarkNodeFontColor, FLinearColor LightNodeFontColor)
+{
+	float Luminance = NodeColor.GetLuminance();
+	if (Luminance < 0.1)
+	{
+		float A = 10.0f * FMath::Clamp((0.1 - Luminance), 0.0, 1.0);
+
+		float B = FMath::Lerp(1.0, 0.8, A);
+
+		return DarkNodeFontColor * B;
+	}
+
+	return LightNodeFontColor;
+}

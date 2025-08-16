@@ -22,6 +22,7 @@
 
 #include "EdGraphNode_K2PostIt.generated.h"
 
+class UEdGraphNode_K2PostIt;
 class INameValidatorInterface;
 class UEdGraphPin;
 class UObject;
@@ -83,8 +84,16 @@ struct FK2PostIt_BaseBlock
 	GENERATED_BODY()
 
 public:
+	FK2PostIt_BaseBlock() {}
+	
+	FK2PostIt_BaseBlock(UEdGraphNode_K2PostIt* InOwnerNode) : Owner(InOwnerNode) {}
+	
 	virtual ~FK2PostIt_BaseBlock() {};
 	
+protected:
+	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
+
+public:
 	virtual TSharedPtr<SWidget> Draw() const { return nullptr; };
 };
 
@@ -96,9 +105,9 @@ struct FK2PostIt_TextBlock : public FK2PostIt_BaseBlock
 	GENERATED_BODY()
 
 public:
-	FK2PostIt_TextBlock() {};
+	FK2PostIt_TextBlock() : FK2PostIt_BaseBlock() {};
 
-	FK2PostIt_TextBlock(FString InText) : Text(InText) {}
+	FK2PostIt_TextBlock(UEdGraphNode_K2PostIt* InOwnerNode, const FString& InText) : FK2PostIt_BaseBlock(InOwnerNode), Text(InText) {}
 
 protected:
 	UPROPERTY()
@@ -120,6 +129,11 @@ struct FK2PostIt_SeparatorBlock : public FK2PostIt_BaseBlock
 	GENERATED_BODY()
 
 public:
+	FK2PostIt_SeparatorBlock() {};
+
+	FK2PostIt_SeparatorBlock(UEdGraphNode_K2PostIt* InOwnerNode) : FK2PostIt_BaseBlock(InOwnerNode) { }
+
+public:
 	TSharedPtr<SWidget> Draw() const override;
 };
 
@@ -133,9 +147,25 @@ struct FK2PostIt_CodeBlock : public FK2PostIt_TextBlock
 public:
 	FK2PostIt_CodeBlock() {};
 
-	FK2PostIt_CodeBlock(FString InText) : FK2PostIt_TextBlock(InText) { }
+	FK2PostIt_CodeBlock(UEdGraphNode_K2PostIt* InOwnerNode, const FString& InText) : FK2PostIt_TextBlock(InOwnerNode, InText) { }
+
+public:
+	TSharedPtr<SWidget> Draw() const override;
+};
+
+USTRUCT()
+struct FK2PostIt_BulletBlock : public FK2PostIt_TextBlock
+{
+	GENERATED_BODY()
+
+public:
+	FK2PostIt_BulletBlock() {};
 	
+	FK2PostIt_BulletBlock(UEdGraphNode_K2PostIt* InOwnerNode, uint8 InIndentLevel, const FString& InText) : FK2PostIt_TextBlock(InOwnerNode, InText), IndentLevel(InIndentLevel) { }
+
 protected:
+	UPROPERTY()
+	uint8 IndentLevel = 0;
 
 public:
 	TSharedPtr<SWidget> Draw() const override;
@@ -237,6 +267,10 @@ private:
 	/** Override the default selection state of this graph node */
 	ESelectionState SelectionState = ESelectionState::Inherited;
 
+	using SomeFunc = TFunction<void(FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)>;
+
+	void ProcessTextBlocks(FString RegexPattern, SomeFunc F);
+	
 	void PeasantTextToRichText(const FText& PeasantText);
 
 	UFUNCTION()

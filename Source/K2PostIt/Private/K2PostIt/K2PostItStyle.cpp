@@ -173,9 +173,9 @@ void FK2PostItStyle::Initialize_Internal()
 	}
 	
 	K2POSTIT_REDEFINE_UE_BRUSH(FSlateImageBrush,			None,							FAppStyle,	"NoBorder",					FVector2f(16, 16), K2PostItColor::Transparent);
-	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_FilledCircle,				FAppStyle,	"Icons.FilledCircle",		FVector2f(16, 16));
-	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_PlusSign,					FAppStyle,	"Icons.Plus",				FVector2f(16, 16));
-	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,	Icon_ProjectSettings_TabIcon,	FAppStyle,	"ProjectSettings.TabIcon",	FVector2f(16, 16));
+	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,		Icon_FilledCircle,				FAppStyle,	"Icons.FilledCircle",		FVector2f(16, 16));
+	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,		Icon_PlusSign,					FAppStyle,	"Icons.Plus",				FVector2f(16, 16));
+	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,		Icon_ProjectSettings_TabIcon,	FAppStyle,	"ProjectSettings.TabIcon",	FVector2f(16, 16));
 
 	// ============================================================================================
 	// FONTS
@@ -191,6 +191,9 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			SelectionShadow_K2PostItNode,		"SelectionShadow_K2PostIt", ".tga", FMargin(22.0/64.0, 16.0/64.0, 42.0/64.0, 38.0/64.0));
 
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			CodeHighlight,						"CodeHighlight_K2PostIt", ".png", FMargin(0.5));
+	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			CodeHighlightBorder,				"CodeHighlightBorder_K2PostIt", ".png", FMargin(0.5));
+	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			CodeHighlightFill,					"CodeHighlightFill_K2PostIt", ".png", FMargin(0.5));
+	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			Separator,							"Box_1px_White", ".png", FMargin(0.5));
 	
 	// ============================================================================================
 	// BRUSHES - SVGs
@@ -305,9 +308,12 @@ void FK2PostItStyle::Initialize_Internal()
 		.SetFontSize(DefaultSize)
 		);
 
+	const FSlateFontInfo Consolas10  = FCoreStyle::GetDefaultFontStyle("Mono", 9);
+	
 	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_CodeBlock, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
 		.SetColorAndOpacity(FSlateColor::UseForeground())
-		.SetFontSize(DefaultSize - 2)
+		.SetFont(Consolas10)
+		.SetFontSize(DefaultSize)
 		);
 	
 	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_Underlined, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalUnderlinedText"),
@@ -320,8 +326,6 @@ void FK2PostItStyle::Initialize_Internal()
 	//StyleInstance->Set("RichTextBlock.Bold", FTextBlockStyle(TextStyle_Normal));
 
 	//StyleInstance->Set("RichTextBlock.BoldHighlight", FTextBlockStyle(TextStyle_Normal));
-
-	auto X = *FAppStyle::GetBrush("ErrorReporting.EmptyBox");
 
 	StyleInstance->Set("K2PostIt.Bold", FTextBlockStyle(TextStyle_Normal)
 		.SetFont(DEFAULT_FONT("Bold", DefaultSize)));
@@ -356,9 +360,7 @@ void FK2PostItStyle::Initialize_Internal()
 		.SetFont(DEFAULT_FONT("Normal", DefaultSize * 0.5)));
 
 	StyleInstance->Set("K2PostIt.Code", FTextBlockStyle(TextStyle_Normal)
-		.SetFont(DEFAULT_FONT("Normal", DefaultSize))
-		.SetColorAndOpacity(K2PostItColor::Gray)
-		.SetUnderlineBrush(X));
+		.SetFont(DEFAULT_FONT("Normal", DefaultSize)));
 
 	// ============================================================================================
 	// EDITABLE TEXT BLOCK STYLES

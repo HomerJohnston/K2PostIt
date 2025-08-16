@@ -163,39 +163,7 @@ void SGraphNodeK2PostIt::RebuildRichText()
 
 	FormattedTextPanel->ClearChildren();
 	
-	TArray< TSharedRef< ITextDecorator > > CustomDecorators;
-
-	const FTextBlockStyle& MyStyle = FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal);
-
-	FWidgetDecorator::FCreateWidget Delegate;
-
-	Delegate.BindStatic(&GetWidgetThing);
-
-	// 	DECLARE_DELEGATE_RetVal_TwoParams( FSlateWidgetRun::FWidgetRunInfo, FCreateWidget, const FTextRunInfo& /*RunInfo*/, const ISlateStyle* /*Style*/ )
-
-	TDelegate<FSlateWidgetRun::FWidgetRunInfo(const FTextRunInfo& RunInfo, const ISlateStyle* Style)> Delegate2;
-	
-	// FSlateWidgetRun::FWidgetRunInfo, FCreateWidget, const FTextRunInfo& /*RunInfo#1#, const ISlateStyle* /*Style#1# 
-	//Delegate = [] (const FTextRunInfo& RunInfo, const ISlateStyle* Style) -> FSlateWidgetRun::FWidgetRunInfo
-	//{
-		
-	//};
-
-	TSharedRef<FWidgetDecorator> Del = FWidgetDecorator::Create("Test", Delegate2);
-	
-	CustomDecorators.Add(Del);
-	/*
-	for (auto& CurrentEvent : CollectedEvents)
-	{
-		CustomDecorators.Add(SRichTextBlock::HyperlinkDecorator(CurrentEvent, FSlateHyperlinkRun::FOnClick::CreateLambda(
-			[this, VisualLoggerView](const FSlateHyperlinkRun::FMetadata& Metadata){ VisualLoggerView->SetSearchString(FText::FromString(Metadata[TEXT("id")])); }
-		)));
-	}
-	*/
-	
-	auto& Blocks = CommentNode->Blocks;
-
-	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : Blocks)
+	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : CommentNode->Blocks)
 	{
 		FormattedTextPanel->AddSlot()
 		.AutoHeight()
@@ -203,21 +171,6 @@ void SGraphNodeK2PostIt::RebuildRichText()
 			Block.GetPtr<FK2PostIt_BaseBlock>()->Draw().ToSharedRef()
 		];
 	}
-	/*
-	FormattedTextPanel->AddSlot()
-	.AutoHeight()
-	[
-		SNew(SRichTextBlock)
-		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
-		.DecoratorStyleSet( &FK2PostItStyle::Get() )
-		.Text(Text)
-		.LineHeightPercentage(1.1f)
-		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
-		.AutoWrapText(true)
-		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("Hello", FLinearColor::Blue))
-		+ SRichTextBlock::Decorator(FK2PostItDecorator_Separator::Create("Separator", FLinearColor::Blue))
-	];
-	*/
 }
 
 bool SGraphNodeK2PostIt::IsNameReadOnly() const
@@ -287,13 +240,26 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 					//.BorderImage( FAppStyle::GetBrush("Graph.Node.TitleBackground") )
 					.BorderImage( FAppStyle::GetBrush("NoBorder") )
 					.BorderBackgroundColor(K2PostItColor::White)
+					.ForegroundColor_Lambda( [this] ()
+					{
+						FLinearColor Color = K2PostItColor::Noir;
+
+						UEdGraphNode_K2PostIt* Owner = Cast<UEdGraphNode_K2PostIt>(GetNodeObj());
+						
+						if (IsValid(Owner))
+						{
+							Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
+						}
+						
+						return Color;
+					})
 					.Padding( FMargin(10,5,5,3) )
 					.HAlign(HAlign_Fill)
 					.VAlign(VAlign_Center)
 					[
 						SAssignNew(InlineEditableText, SInlineEditableTextBlock)
 						.Style( &CommentStyle )
-						.ColorAndOpacity(K2PostItColor::DarkGray)
+						.ColorAndOpacity(FSlateColor::UseForeground())
 						.ShadowOffset(0)
 						.ShadowColorAndOpacity(K2PostItColor::Transparent)
 						.Text( this, &SGraphNodeK2PostIt::GetEditableNodeTitleAsText )
@@ -335,7 +301,19 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 					[
 						SNew(SBorder)
 						.BorderImage( FAppStyle::GetBrush("NoBorder") )
-						.ForegroundColor(K2PostItColor::DarkGray)
+						.ForegroundColor_Lambda( [this] ()
+						{
+							FLinearColor Color = K2PostItColor::Noir;
+
+							UEdGraphNode_K2PostIt* Owner = Cast<UEdGraphNode_K2PostIt>(GetNodeObj());
+							
+							if (IsValid(Owner))
+							{
+								Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
+							}
+							
+							return Color;
+						})
 						.VAlign(VAlign_Fill)
 						.Padding(4, 8, 4, 8)
 						[

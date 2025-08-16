@@ -25,6 +25,10 @@ struct FK2PostItBrushes
 	FName SelectionShadow_K2PostItNode;
 
 	FName CodeHighlight;
+	FName CodeHighlightBorder;
+	FName CodeHighlightFill;
+
+	FName Separator;
 };
 
 struct FK2PostItStyles
