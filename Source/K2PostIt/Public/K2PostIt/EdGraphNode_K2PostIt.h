@@ -126,18 +126,16 @@ public:
 // ================================================================================================
 
 USTRUCT()
-struct FK2PostIt_CodeBlock : public FK2PostIt_BaseBlock
+struct FK2PostIt_CodeBlock : public FK2PostIt_TextBlock
 {
 	GENERATED_BODY()
 
 public:
 	FK2PostIt_CodeBlock() {};
 
-	FK2PostIt_CodeBlock(FString InText) : Text(InText) {}
-
+	FK2PostIt_CodeBlock(FString InText) : FK2PostIt_TextBlock(InText) { }
+	
 protected:
-	UPROPERTY()
-	FString Text;
 
 public:
 	TSharedPtr<SWidget> Draw() const override;
