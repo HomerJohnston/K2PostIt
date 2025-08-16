@@ -16,6 +16,14 @@
 #include "UObject/Object.h"
 #include "UObject/UnrealType.h"
 
+#include <regex>
+#include <string>
+#include <Widgets/Text/SRichTextBlock.h>
+
+#include "K2PostIt/K2PostItColor.h"
+#include "K2PostIt/K2PostItDecorator_InlineCode.h"
+#include "K2PostIt/K2PostItStyle.h"
+
 class UEdGraphPin;
 
 #define LOCTEXT_NAMESPACE "EdGraph"
@@ -37,7 +45,9 @@ namespace FEdGraphNode_K2PostIt_Utils
 			}
 		}
 	}
-}
+};
+
+
 
 /////////////////////////////////////////////////////
 // UEdGraphNode_K2PostIt
@@ -50,6 +60,50 @@ void UK2PostItMarkdownBinding::OpenURL(FString URL)
 void UK2PostItMarkdownBinding::OpenAsset(FString URL)
 {
 	//MarkdownAssetStatics::TryToOpenAsset(URL);
+}
+
+TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
+{
+	return SNew(SRichTextBlock)
+	.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
+	.DecoratorStyleSet( &FK2PostItStyle::Get() )
+	.Text(FText::FromString(Text))
+	.LineHeightPercentage(1.1f)
+	.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
+	.AutoWrapText(true)
+	+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", FLinearColor::Blue));
+}
+
+TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
+{
+	return SNew(SBox)
+	.HAlign(HAlign_Fill)
+	.Padding(12, 12, 12, 12)
+	[
+		SNew(SSeparator)
+		.Thickness(2)
+		.ColorAndOpacity(K2PostItColor::LightGray_Glass)
+	];
+}
+
+TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
+{
+	return SNew(SBox)
+	.Padding(0, 4, 0, 8)
+	[
+		SNew(SBorder)
+		.BorderImage(FAppStyle::GetBrush("ErrorReporting.EmptyBox"))
+		.Padding(8, 8)
+		[
+			SNew(SRichTextBlock)
+			.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_CodeBlock)
+			.DecoratorStyleSet( &FK2PostItStyle::Get() )
+			.Text(FText::FromString(Text))
+			.LineHeightPercentage(1.1f)
+			.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
+			.AutoWrapText(true)	
+		]
+	];
 }
 
 UEdGraphNode_K2PostIt::UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectInitializer)
@@ -196,11 +250,21 @@ bool UEdGraphNode_K2PostIt::IsSelectedInEditor() const
 	return SelectionState == ESelectionState::Selected;
 }
 
+void UEdGraphNode_K2PostIt::PostLoad()
+{
+	Super::PostLoad();
+
+	if (!IsTemplate())
+	{
+		GetMutableDefault<URegexTester>()->OnRegexPatternUpdated.AddDynamic(this, &ThisClass::UpdateShitPlease);
+	}
+}
+
 void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 {
 	CommentText = Text;
 	
-	RichText = PeasantTextToRichText(Text);
+	PeasantTextToRichText(CommentText);
 }
 
 void UEdGraphNode_K2PostIt::SetSelectionState(const ESelectionState InSelectionState)
@@ -208,182 +272,243 @@ void UEdGraphNode_K2PostIt::SetSelectionState(const ESelectionState InSelectionS
 	SelectionState = InSelectionState;
 }
 
-TArray<FText> UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
+void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 {
-	TArray<FString> Results;
+	Blocks.Empty();
 
-	FString Raw = PeasantText.ToString();
+	FString RawBlock = PeasantText.ToString();
 
-	TArray<FString> Separated;
+	// ==========================================
+	// The more difficult stuff. Break up into chunks. We do this first because it's annoying to find `Stuff` without wrecking ```Stuff``` (but I should fix this one day)
 
-	// --- Separated Blocks ---
-	// ---
+	// --- Separator
 	{
-		FString RawTemp = Raw;
+		const FRegexPattern Pattern( R"((?m)(\r?\n)?^---{1,}$(\r?\n)?)" , ERegexPatternFlags::CaseInsensitive);
+		FRegexMatcher Matcher(Pattern, RawBlock);
+		int32 RunningIndex = 0;
 		
-		const FRegexPattern Pattern( R"((?m)^---{1,}$)" , ERegexPatternFlags::CaseInsensitive);
-		FRegexMatcher Matcher(Pattern, RawTemp);
 		while (Matcher.FindNext())
 		{
-			FString Before = Raw.Left(Matcher.GetMatchBeginning());
-			RawTemp = Raw.RightChop(Matcher.GetMatchEnding());
+			if (Matcher.GetMatchBeginning() > 0)
+			{
+				FString Before = RawBlock.Mid(RunningIndex, Matcher.GetMatchBeginning() - RunningIndex);
 
-			Separated.Add(Before);
+				Blocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_TextBlock>(Before));
+
+				RunningIndex = Matcher.GetMatchEnding();	
+			}
+
+			Blocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_SeparatorBlock>());
 		}
 
-		Separated.Add(RawTemp);
-	}
-
-	for (FString& Block : Separated)
-	{
-		// For some reason unreal's regex parser sucks ass and sometimes ^ refuses to catch the start of a line, so process these backwards
-
-		// --- Headers ---
-		// ### H3
+		if (RunningIndex < RawBlock.Len() - 1)
 		{
-			const FRegexPattern Pattern( R"((?m)^### (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Header3>%s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
+			Blocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_TextBlock>(RawBlock.RightChop(RunningIndex)));
 		}
-		
-		// ## H2
-		{
-			const FRegexPattern Pattern( R"((?m)^## (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Header2>%s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		
-		// # H1
-		{
-			const FRegexPattern Pattern( R"((?m)^# (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Header1>%s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		
-		// --- Other markdown ---
-	    // Bold: **text**
-	    {
-	        const FRegexPattern Pattern(TEXT(R"(\*\*(.+?)\*\*)"));
-	        FRegexMatcher Matcher(Pattern, Block);
-	        while (Matcher.FindNext())
-	        {
-	            FString Inner = Matcher.GetCaptureGroup(1);
-	            FString Replacement = FString::Printf(TEXT("<K2PostIt.Bold>%s</>"), *Inner);
-	            Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-	            Matcher = FRegexMatcher(Pattern, Block);
-	        }
-	    }
-
-		// Underline: __text__
-		{
-			const FRegexPattern Pattern(TEXT(R"(__(.+?)__)"));
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Underline>%s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		
-	    // Italic: _text_
-	    {
-	        const FRegexPattern Pattern(TEXT(R"(_(.+?)_)"));
-	        FRegexMatcher Matcher(Pattern, Block);
-	        while (Matcher.FindNext())
-	        {
-	            FString Inner = Matcher.GetCaptureGroup(1);
-	            FString Replacement = FString::Printf(TEXT("<K2PostIt.Italic>%s</>"), *Inner);
-	            Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-	            Matcher = FRegexMatcher(Pattern, Block);
-	        }
-	    }
-		
-		// Bullet: -- WHITE CIRCLE
-		{
-			const FRegexPattern Pattern( R"((?m)^--- (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet2>             \u25CB %s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		
-		// Bullet: - BLACK CIRCLE
-		{
-			const FRegexPattern Pattern( R"((?m)^-- (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet1>        \u25CF %s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		
-		
-		///*
-		// Bullet: -- BLACK DIAMOND MINUS WHITE X
-		{
-			const FRegexPattern Pattern( R"((?m)^- (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet1>  \u2756 %s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		//*/
-		
-		/*
-		// Bullet: - BLACK CIRCLE
-		{
-			const FRegexPattern Pattern( R"((?m)^- (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-			FRegexMatcher Matcher(Pattern, Block);
-			while (Matcher.FindNext())
-			{
-				FString Inner = Matcher.GetCaptureGroup(1);
-				FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet1> \u25CF %s</>"), *Inner);
-				Block = Block.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-				Matcher = FRegexMatcher(Pattern, Block);
-			}
-		}
-		*/
 	}
 	
-	TArray<FText> ResultsText;
-
-	for (const FString& Block : Separated)
+	for (int32 i = 0; i < Blocks.Num(); ++i)
 	{
-		ResultsText.Add(FText::FromString(Block));
+		TInstancedStruct<FK2PostIt_BaseBlock>& TempBlock = Blocks[i];
+		
+		if (TempBlock.GetScriptStruct() == FK2PostIt_TextBlock::StaticStruct())
+		{
+			const FK2PostIt_TextBlock* TextBlock = TempBlock.GetPtr<FK2PostIt_TextBlock>();
+
+			const FString& Text = TextBlock->GetText();
+
+			//const FRegexPattern Pattern( R"((\r?\n)?```(?:\w+)?\n([\s\S]*?)\n```(\r?\n)?)" , ERegexPatternFlags::CaseInsensitive);
+			//const FRegexPattern Pattern( R"(`{3}[\s\S]*?`{3})" , ERegexPatternFlags::CaseInsensitive);
+			//const FRegexPattern Pattern( R"((?<=[^`]|^)(```?)([^`]+)\1(?=[^`]|$))" , ERegexPatternFlags::CaseInsensitive);
+			const FRegexPattern Pattern( R"((?<=[^`]|^)(\r?\n```)(?:\r?\n)?([\s\S]*?)(?:\r?\n)?\1(?=[^`]|$)(\r?\n)?)" , ERegexPatternFlags::CaseInsensitive);
+
+			const class URegexTester* RegexTester = GetDefault<URegexTester>();
+
+			//const FRegexPattern Pattern( RegexTester->RegexPattern , ERegexPatternFlags::CaseInsensitive);
+			
+			
+			FRegexMatcher Matcher(Pattern, Text);
+			int32 RunningIndex = 0;
+
+			TArray<TInstancedStruct<FK2PostIt_BaseBlock>> ReplacementBlocks;
+			
+			while (Matcher.FindNext())
+			{
+				if (Matcher.GetMatchBeginning() > 0)
+				{
+					FString Before = Text.Mid(RunningIndex, Matcher.GetMatchBeginning() - RunningIndex);
+					ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_TextBlock>(Before));
+
+				}
+
+				FString Code = Matcher.GetCaptureGroup(2);
+				ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_CodeBlock>(Code));
+
+				RunningIndex = Matcher.GetMatchEnding();	
+			}
+
+			if (RunningIndex < Text.Len() - 1)
+			{
+				FString After = Text.RightChop(RunningIndex);
+				ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_TextBlock>(After));
+			}
+
+			if (ReplacementBlocks.Num() > 0)
+			{
+				Blocks.RemoveAt(i);
+				Blocks.Insert(ReplacementBlocks, i);
+				i += ReplacementBlocks.Num() - 1;
+			}
+		}
 	}
 	
-    return ResultsText;
+	for (int32 i = 0; i < Blocks.Num(); ++i)
+	{
+		TInstancedStruct<FK2PostIt_BaseBlock>& TempBlock = Blocks[i];
+
+		if (TempBlock.GetScriptStruct() == FK2PostIt_TextBlock::StaticStruct())
+		{
+			FK2PostIt_TextBlock& TextBlock = TempBlock.GetMutable<FK2PostIt_TextBlock>();
+
+			FString& Text = TextBlock.GetText();
+			
+			// ### H3
+			{
+				const FRegexPattern Pattern( R"((?m)^### (.+)$)" , ERegexPatternFlags::CaseInsensitive);
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Header3>%s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+			// ## H2
+			{
+				const FRegexPattern Pattern( R"((?m)^## (.+)$)" , ERegexPatternFlags::CaseInsensitive);
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Header2>%s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+			// # H1
+			{
+				const FRegexPattern Pattern( R"((?m)^# (.+)$)" , ERegexPatternFlags::CaseInsensitive);
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Header1>%s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+		    // **text** Bold
+		    {
+		        const FRegexPattern Pattern(TEXT(R"((?m)\*\*(.+?)\*\*)"));
+		        FRegexMatcher Matcher(Pattern, Text);
+		        while (Matcher.FindNext())
+		        {
+		            FString Inner = Matcher.GetCaptureGroup(1);
+		            FString Replacement = FString::Printf(TEXT("<K2PostIt.Bold>%s</>"), *Inner);
+		            Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+		            Matcher = FRegexMatcher(Pattern, Text);
+		        }
+		    }
+
+			// __text__ Underline
+			{
+				const FRegexPattern Pattern(TEXT(R"((?m)__(.+?)__)"));
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Underline>%s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+		    // _text_ Italic
+		    {
+		        const FRegexPattern Pattern(TEXT(R"((?m)_(.+?)_)"));
+		        FRegexMatcher Matcher(Pattern, Text);
+		        while (Matcher.FindNext())
+		        {
+		            FString Inner = Matcher.GetCaptureGroup(1);
+		            FString Replacement = FString::Printf(TEXT("<K2PostIt.Italic>%s</>"), *Inner);
+		            Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+		            Matcher = FRegexMatcher(Pattern, Text);
+		        }
+		    }
+			
+			// `text` Code
+			{
+				const FRegexPattern Pattern(TEXT(R"((?m)`(.+?)`)"));
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Code>%s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+			//   - 3rd Bullet (white circle)
+			{
+				const FRegexPattern Pattern( R"((?m)^  - (.+)$)" , ERegexPatternFlags::CaseInsensitive);
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet2>             \u25CB %s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+			//  - 2nd Bullet (black circle)
+			{
+				const FRegexPattern Pattern( R"((?m)^ - (.+)$)" , ERegexPatternFlags::CaseInsensitive);
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet1>        \u25CF %s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+			
+			// - 1st Bullet (black diamond minus white X)
+			{
+				const FRegexPattern Pattern( R"((?m)^- (.+)$)" , ERegexPatternFlags::CaseInsensitive);
+				FRegexMatcher Matcher(Pattern, Text);
+				while (Matcher.FindNext())
+				{
+					FString Inner = Matcher.GetCaptureGroup(1);
+					FString Replacement = FString::Printf(TEXT("<K2PostIt.Bullet1>  \u2756 %s</>"), *Inner);
+					Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					Matcher = FRegexMatcher(Pattern, Text);
+				}
+			}
+		}
+	}
+}
+
+void UEdGraphNode_K2PostIt::UpdateShitPlease()
+{
+	PeasantTextToRichText(CommentText);
+	ReconstructNode();
 }
 
 /////////////////////////////////////////////////////

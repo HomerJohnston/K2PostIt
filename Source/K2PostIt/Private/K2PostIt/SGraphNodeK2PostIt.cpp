@@ -49,6 +49,8 @@
 #include "Widgets/Text/SInlineEditableTextBlock.h"
 #include "SWebBrowserView.h"
 #include "Interfaces/IPluginManager.h"
+#include "K2PostIt/K2PostItDecorator_InlineCode.h"
+#include "K2PostIt/K2PostItDecorator_Separator.h"
 
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Text/SRichTextBlock.h"
@@ -161,34 +163,61 @@ void SGraphNodeK2PostIt::RebuildRichText()
 
 	FormattedTextPanel->ClearChildren();
 	
-	for (int32 i = 0; i < CommentNode->RichText.Num(); ++i)
-	{
-		const FText& Text = CommentNode->RichText[i];
+	TArray< TSharedRef< ITextDecorator > > CustomDecorators;
+
+	const FTextBlockStyle& MyStyle = FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal);
+
+	FWidgetDecorator::FCreateWidget Delegate;
+
+	Delegate.BindStatic(&GetWidgetThing);
+
+	// 	DECLARE_DELEGATE_RetVal_TwoParams( FSlateWidgetRun::FWidgetRunInfo, FCreateWidget, const FTextRunInfo& /*RunInfo*/, const ISlateStyle* /*Style*/ )
+
+	TDelegate<FSlateWidgetRun::FWidgetRunInfo(const FTextRunInfo& RunInfo, const ISlateStyle* Style)> Delegate2;
+	
+	// FSlateWidgetRun::FWidgetRunInfo, FCreateWidget, const FTextRunInfo& /*RunInfo#1#, const ISlateStyle* /*Style#1# 
+	//Delegate = [] (const FTextRunInfo& RunInfo, const ISlateStyle* Style) -> FSlateWidgetRun::FWidgetRunInfo
+	//{
 		
+	//};
+
+	TSharedRef<FWidgetDecorator> Del = FWidgetDecorator::Create("Test", Delegate2);
+	
+	CustomDecorators.Add(Del);
+	/*
+	for (auto& CurrentEvent : CollectedEvents)
+	{
+		CustomDecorators.Add(SRichTextBlock::HyperlinkDecorator(CurrentEvent, FSlateHyperlinkRun::FOnClick::CreateLambda(
+			[this, VisualLoggerView](const FSlateHyperlinkRun::FMetadata& Metadata){ VisualLoggerView->SetSearchString(FText::FromString(Metadata[TEXT("id")])); }
+		)));
+	}
+	*/
+	
+	auto& Blocks = CommentNode->Blocks;
+
+	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : Blocks)
+	{
 		FormattedTextPanel->AddSlot()
 		.AutoHeight()
 		[
-			SNew(SRichTextBlock)
-			.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
-			.DecoratorStyleSet( &FK2PostItStyle::Get() )
-			.Text(Text)
-			.LineHeightPercentage(1.1f)
-			.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
-			.AutoWrapText(true)
+			Block.GetPtr<FK2PostIt_BaseBlock>()->Draw().ToSharedRef()
 		];
-
-		if (i < CommentNode->RichText.Num() - 1)
-		{
-			FormattedTextPanel->AddSlot()
-			.AutoHeight()
-			.Padding(24, 0)
-			[
-				SNew(SSeparator)
-				.Thickness(2)
-				.ColorAndOpacity(K2PostItColor::LightGray_Glass)
-			];	
-		}
 	}
+	/*
+	FormattedTextPanel->AddSlot()
+	.AutoHeight()
+	[
+		SNew(SRichTextBlock)
+		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
+		.DecoratorStyleSet( &FK2PostItStyle::Get() )
+		.Text(Text)
+		.LineHeightPercentage(1.1f)
+		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
+		.AutoWrapText(true)
+		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("Hello", FLinearColor::Blue))
+		+ SRichTextBlock::Decorator(FK2PostItDecorator_Separator::Create("Separator", FLinearColor::Blue))
+	];
+	*/
 }
 
 bool SGraphNodeK2PostIt::IsNameReadOnly() const
@@ -583,6 +612,11 @@ void SGraphNodeK2PostIt::OnPostItCommentTextCommitted(const FText& Text, ETextCo
 	}
 
 	RebuildRichText();
+}
+
+FSlateWidgetRun::FWidgetRunInfo SGraphNodeK2PostIt::GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style)
+{
+	return FSlateWidgetRun::FWidgetRunInfo(SNew(STextBlock).Text(INVTEXT("HELLO WORLD")), 5);
 }
 
 bool SGraphNodeK2PostIt::CanBeSelected(const FVector2D& MousePositionInNode) const

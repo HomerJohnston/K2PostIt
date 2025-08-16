@@ -189,6 +189,8 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			Border_K2PostItNode,				"Border_K2PostIt", ".tga", FMargin(4.0/8.0));
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			Shadow_K2PostItNode,				"Shadow_K2PostIt", ".png", FMargin(22.0/64.0, 4.0/8.0, 42.0/64.0, 4.0/8.0));
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			SelectionShadow_K2PostItNode,		"SelectionShadow_K2PostIt", ".tga", FMargin(22.0/64.0, 16.0/64.0, 42.0/64.0, 38.0/64.0));
+
+	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			CodeHighlight,						"CodeHighlight_K2PostIt", ".png", FMargin(0.5));
 	
 	// ============================================================================================
 	// BRUSHES - SVGs
@@ -303,6 +305,11 @@ void FK2PostItStyle::Initialize_Internal()
 		.SetFontSize(DefaultSize)
 		);
 
+	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_CodeBlock, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
+		.SetColorAndOpacity(FSlateColor::UseForeground())
+		.SetFontSize(DefaultSize - 2)
+		);
+	
 	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_Underlined, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalUnderlinedText"),
 		.SetColorAndOpacity(FSlateColor::UseForeground())
 		.SetFontSize(DefaultSize)
@@ -313,6 +320,8 @@ void FK2PostItStyle::Initialize_Internal()
 	//StyleInstance->Set("RichTextBlock.Bold", FTextBlockStyle(TextStyle_Normal));
 
 	//StyleInstance->Set("RichTextBlock.BoldHighlight", FTextBlockStyle(TextStyle_Normal));
+
+	auto X = *FAppStyle::GetBrush("ErrorReporting.EmptyBox");
 
 	StyleInstance->Set("K2PostIt.Bold", FTextBlockStyle(TextStyle_Normal)
 		.SetFont(DEFAULT_FONT("Bold", DefaultSize)));
@@ -345,6 +354,11 @@ void FK2PostItStyle::Initialize_Internal()
 
 	StyleInstance->Set("K2PostIt.SmallFont", FTextBlockStyle(TextStyle_Normal)
 		.SetFont(DEFAULT_FONT("Normal", DefaultSize * 0.5)));
+
+	StyleInstance->Set("K2PostIt.Code", FTextBlockStyle(TextStyle_Normal)
+		.SetFont(DEFAULT_FONT("Normal", DefaultSize))
+		.SetColorAndOpacity(K2PostItColor::Gray)
+		.SetUnderlineBrush(X));
 
 	// ============================================================================================
 	// EDITABLE TEXT BLOCK STYLES

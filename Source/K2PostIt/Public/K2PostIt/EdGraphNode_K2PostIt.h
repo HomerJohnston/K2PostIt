@@ -7,6 +7,7 @@
 #include "Containers/UnrealString.h"
 #include "CoreMinimal.h"
 #include "EdGraphNode_Comment.h"
+#include "InstancedStruct.h"
 #include "EdGraph/EdGraphNode.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "HAL/Platform.h"
@@ -28,6 +29,26 @@ struct FPropertyChangedEvent;
 struct Rect;
 
 typedef TArray<class UObject*> FCommentNodeSet;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRegexPatternUpdated);
+
+UCLASS(Config = EditorPerProjectUserSettings)
+class URegexTester : public UDeveloperSettings
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, Config, GlobalConfig, Category="BlahBlah")
+	FString RegexPattern;
+
+	UPROPERTY()
+	FOnRegexPatternUpdated OnRegexPatternUpdated;
+
+	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override
+	{
+		OnRegexPatternUpdated.Broadcast();
+	}
+};
 
 UCLASS()
 class K2POSTIT_API UK2PostItMarkdownBinding : public UObject
@@ -54,6 +75,75 @@ public:
 	FText Text;
 };
 
+// ================================================================================================
+
+USTRUCT()
+struct FK2PostIt_BaseBlock
+{
+	GENERATED_BODY()
+
+public:
+	virtual ~FK2PostIt_BaseBlock() {};
+	
+	virtual TSharedPtr<SWidget> Draw() const { return nullptr; };
+};
+
+// ================================================================================================
+
+USTRUCT()
+struct FK2PostIt_TextBlock : public FK2PostIt_BaseBlock
+{
+	GENERATED_BODY()
+
+public:
+	FK2PostIt_TextBlock() {};
+
+	FK2PostIt_TextBlock(FString InText) : Text(InText) {}
+
+protected:
+	UPROPERTY()
+	FString Text;
+
+public:
+	TSharedPtr<SWidget> Draw() const override;
+
+	FString& GetText() { return Text; }
+	
+	const FString& GetText() const { return Text; }
+};
+
+// ================================================================================================
+
+USTRUCT()
+struct FK2PostIt_SeparatorBlock : public FK2PostIt_BaseBlock
+{
+	GENERATED_BODY()
+
+public:
+	TSharedPtr<SWidget> Draw() const override;
+};
+
+// ================================================================================================
+
+USTRUCT()
+struct FK2PostIt_CodeBlock : public FK2PostIt_BaseBlock
+{
+	GENERATED_BODY()
+
+public:
+	FK2PostIt_CodeBlock() {};
+
+	FK2PostIt_CodeBlock(FString InText) : Text(InText) {}
+
+protected:
+	UPROPERTY()
+	FString Text;
+
+public:
+	TSharedPtr<SWidget> Draw() const override;
+};
+
+// ================================================================================================
 
 UCLASS()
 class K2POSTIT_API UEdGraphNode_K2PostIt : public UK2Node
@@ -92,7 +182,7 @@ public:
 	FText CommentText;
 
 	UPROPERTY()
-	TArray<FText> RichText;
+	TArray<TInstancedStruct<FK2PostIt_BaseBlock>> Blocks;
 	
 public:
 
@@ -100,6 +190,9 @@ public:
 	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual bool IsSelectedInEditor() const override;
+
+	void PostLoad() override;
+	
 	//~ End UObject Interface
 
 	//~ Begin UEdGraphNode Interface
@@ -146,7 +239,10 @@ private:
 	/** Override the default selection state of this graph node */
 	ESelectionState SelectionState = ESelectionState::Inherited;
 
-	TArray<FText> PeasantTextToRichText(const FText& PeasantText);
+	void PeasantTextToRichText(const FText& PeasantText);
+
+	UFUNCTION()
+	void UpdateShitPlease();
 };
 
 // Code that registers 'C' to add comment...

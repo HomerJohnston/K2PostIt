@@ -1,5 +1,4 @@
-// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
-// This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license.
+// Creative commons. Do whatever you want with this file.
 
 #pragma once
 
@@ -24,6 +23,8 @@ struct FK2PostItBrushes
 	FName Border_K2PostItNode;
 	FName Shadow_K2PostItNode;
 	FName SelectionShadow_K2PostItNode;
+
+	FName CodeHighlight;
 };
 
 struct FK2PostItStyles
@@ -36,6 +37,7 @@ struct FK2PostItStyles
 	FName TextStyle_Editor;
 	FName TextStyle_Normal;
 	FName TextStyle_Underlined;
+	FName TextStyle_CodeBlock;
 };
 
 struct FK2PostItFonts

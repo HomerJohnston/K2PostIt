@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Creative commons. Do whatever you want with this file.
 
 #pragma once
 
@@ -11,6 +11,8 @@
 #include "Math/Vector2D.h"
 #include "SGraphNodeResizable.h"
 #include "SNodePanel.h"
+#include "Framework/Text/ITextDecorator.h"
+#include "Framework/Text/SlateWidgetRun.h"
 #include "Styling/SlateColor.h"
 #include "Styling/SlateTypes.h"
 #include "Templates/SharedPointer.h"
@@ -104,6 +106,7 @@ protected:
 
 	void OnPostItCommentTextCommitted(const FText& Text, ETextCommit::Type Arg);
 
+	static FSlateWidgetRun::FWidgetRunInfo GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style);
 	
 private:
 	

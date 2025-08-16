@@ -74,6 +74,15 @@ public class K2PostIt : ModuleRules
 			}
 			);
 		
+		if (Target.Version.MajorVersion == 5 && Target.Version.MinorVersion < 5)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"StructUtils" // This was rolled into engine core in 5.5
+				}
+			);
+		}
 		
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
