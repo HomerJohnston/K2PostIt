@@ -194,12 +194,13 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			CodeHighlightBorder,				"CodeHighlightBorder_K2PostIt", ".png", FMargin(0.5));
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			CodeHighlightFill,					"CodeHighlightFill_K2PostIt", ".png", FMargin(0.5));
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			Separator,							"Box_1px_White", ".png", FMargin(0.5));
-	
+
+	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			PreviewPaneBorder,					"Border_MarkdownPreviewPane", ".png", FMargin(0.5));
 	// ============================================================================================
 	// BRUSHES - SVGs
 	// ============================================================================================
 //	K2POSTIT_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Chevron_Right,				"Icon_Chevron_Right", ".svg",			FVector2f(16, 16), K2PostItColor::White);
-//	K2POSTIT_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Caret_Right,				"Icon_Caret_Right", ".svg",				FVector2f(16, 16), K2PostItColor::White);
+	K2POSTIT_DEFINE_BRUSH(FSlateVectorImageBrush,	Icon_Edit,						"Icon_Edit", ".svg",				FVector2f(32, 32), K2PostItColor::White);
 	
 	// ============================================================================================
 	// SLIDER STYLES
@@ -221,17 +222,15 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_HoverHintOnly, FAppStyle::Get().GetWidgetStyle<FButtonStyle>("HoverHintOnly"), );
 	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_SimpleButton, FAppStyle::Get().GetWidgetStyle<FButtonStyle>("SimpleButton"), );
 
-	/*
-	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_HeaderButton, FButtonStyle::GetDefault(),
-		.SetNormal(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::Gray))
-		.SetHovered(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::White))
-		.SetPressed(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::DarkGray))
-		.SetNormalForeground(K2PostItColor::DimWhite)
-		.SetHoveredForeground(K2PostItColor::White)
-		.SetPressedForeground(K2PostItColor::LightGray)
+	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_EditButton, ButtonStyle_HoverHintOnly,
+		//.SetNormal(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::Gray))
+		//.SetHovered(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::White))
+		//.SetPressed(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::DarkGray))
+		.SetNormalForeground(K2PostItColor::Gray)
+		.SetHoveredForeground(K2PostItColor::LightGray)
+		.SetPressedForeground(K2PostItColor::Gray)
 		.SetPressedPadding(K2POSTIT_COMMON_PRESSED_PADDING)
 	);
-	*/
 	
 	// ============================================================================================
 	// COMBO BUTTON STYLES

@@ -180,7 +180,7 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 {
 	const FString Bullets[3] { TEXT("\u2756"), TEXT("\u25CF"), TEXT("\u25CB")};
 	//const FName Styles[3] { K2PostItStyles.TextStyle_Normal, K2PostItStyles.}
-	const float IndentFactor = 8;
+	const float IndentFactor = 16;
 	const int32 SpacesPerIndent = 2;
 	
 	int32 EffectiveIndentLevel = FMath::Clamp(IndentLevel / SpacesPerIndent, 0, 2);
@@ -188,7 +188,7 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 	FString EffectiveText = Bullets[EffectiveIndentLevel] + " " + Text;
 	
 	return SNew(SBorder)
-	.Padding(IndentFactor * EffectiveIndentLevel, 0, 0, 0)
+	.Padding(IndentFactor * (1 + EffectiveIndentLevel), 0, 0, 0)
 	.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.None))
 	.ForegroundColor_Lambda( [this] ()
 	{
@@ -361,11 +361,6 @@ bool UEdGraphNode_K2PostIt::IsSelectedInEditor() const
 void UEdGraphNode_K2PostIt::PostLoad()
 {
 	Super::PostLoad();
-
-	if (!IsTemplate())
-	{
-		GetMutableDefault<URegexTester>()->OnRegexPatternUpdated.AddDynamic(this, &ThisClass::UpdateShitPlease);
-	}
 }
 
 void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
@@ -595,12 +590,6 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 			}
 		}
 	}
-}
-
-void UEdGraphNode_K2PostIt::UpdateShitPlease()
-{
-	PeasantTextToRichText(CommentText);
-	ReconstructNode();
 }
 
 /////////////////////////////////////////////////////

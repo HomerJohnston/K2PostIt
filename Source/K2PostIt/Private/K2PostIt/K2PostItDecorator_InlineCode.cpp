@@ -66,7 +66,7 @@ TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<cla
 TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const FTextRunInfo& RunInfo, const FTextBlockStyle& DefaultTextStyle) const
 {
 	return SNew(SBox)
-	.Padding(2, -3, 2, -3)
+	.Padding(0, -3, 0, -3)
 	[
 		SNew(SBorder)
 		.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightFill))
@@ -97,7 +97,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 		.Padding(0)
 		[
 			SNew(SBorder)
-			.Padding(3, 1, 3, 1)
+			.Padding(2, 1, 2, 1)
 			.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightBorder))
 			.BorderBackgroundColor_Lambda( [this] ()
 			{

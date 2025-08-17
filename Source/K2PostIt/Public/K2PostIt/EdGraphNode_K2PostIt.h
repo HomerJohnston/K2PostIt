@@ -33,24 +33,6 @@ typedef TArray<class UObject*> FCommentNodeSet;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRegexPatternUpdated);
 
-UCLASS(Config = EditorPerProjectUserSettings)
-class URegexTester : public UDeveloperSettings
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, Config, GlobalConfig, Category="BlahBlah")
-	FString RegexPattern;
-
-	UPROPERTY()
-	FOnRegexPatternUpdated OnRegexPatternUpdated;
-
-	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override
-	{
-		OnRegexPatternUpdated.Broadcast();
-	}
-};
-
 UCLASS()
 class K2POSTIT_API UK2PostItMarkdownBinding : public UObject
 {
@@ -186,6 +168,9 @@ public:
 	UPROPERTY(EditAnywhere, Category=Comment)
 	FLinearColor CommentColor;
 
+	UPROPERTY(EditAnywhere, Category=Comment)
+	bool bDisableMarkdownRendering = false;
+	
 	/** Size of the text in the comment box */
 	UPROPERTY(EditAnywhere, Category=Comment, meta=(ClampMin=8, ClampMax=64))
 	int32 TitleFontSize;
@@ -272,9 +257,6 @@ private:
 	void ProcessTextBlocks(FString RegexPattern, SomeFunc F);
 	
 	void PeasantTextToRichText(const FText& PeasantText);
-
-	UFUNCTION()
-	void UpdateShitPlease();
 };
 
 // Code that registers 'C' to add comment...

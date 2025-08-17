@@ -5,6 +5,7 @@
 #include "Containers/Array.h"
 #include "Containers/UnrealString.h"
 #include "CoreMinimal.h"
+#include "EdGraphNode_K2PostIt.h"
 #include "HAL/Platform.h"
 #include "Input/Reply.h"
 #include "Layout/SlateRect.h"
@@ -37,6 +38,7 @@ public:
 
 	//~ Begin SWidget Interface
 	virtual FReply OnMouseButtonDoubleClick( const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent ) override;
+	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	virtual FReply OnMouseButtonUp( const FGeometry& MyGeometry, const FPointerEvent& MouseEvent ) override;
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 	virtual FReply OnDrop( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent ) override;
@@ -73,6 +75,8 @@ public:
 	virtual FSlateRect GetTitleRect() const override;
 
 protected:
+	void OnPostItCommentTextChanged(const FText& Text);
+
 	//~ Begin SGraphNode Interface
 	virtual void UpdateGraphNode() override;
 	virtual void PopulateMetaTag(class FGraphNodeMetaData* TagMeta) const override;
@@ -96,6 +100,8 @@ protected:
 	/** @return the color to tint the comment body */
 	FSlateColor GetCommentBodyColor() const;
 
+	FSlateColor GetMarkdownPreviewPaneColor() const;
+
 	/** @return the color to tint the title bar */
 	FSlateColor GetCommentTitleBarColor() const;
 
@@ -117,6 +123,12 @@ private:
 	TSharedPtr<SCommentBubble> CommentBubble;
 
 	TSharedPtr<SMultiLineEditableText> CommentTextSource;
+
+	bool bMouseClickEditingInterlock = false;
+
+	bool bEditButtonClicked = false;
+
+	float PreviewPanelRenderOpacity = 0.0f;
 	
 	/** The current selection state of the comment */
 	mutable bool bIsSelected;
@@ -125,11 +137,17 @@ private:
 	TSharedPtr<SBorder> TitleBar;
 
 	TSharedPtr<SBorder> MainPanel;
+
+	TSharedPtr<SBox> PreviewPanelBox;
+
+	TWeakPtr<SWindow> PreviewPanelWindow;
 	
 	TSharedPtr<SWebBrowserView> WebBrowser;
 
 	TSharedPtr<SVerticalBox> FormattedTextPanel;
 	
+	FMargin Padding_MarkdownPreviewPanel() const;
+
 protected:
 	/** cached comment title */
 	FString CachedCommentTitle;
@@ -148,4 +166,8 @@ private:
 	FInlineEditableTextBlockStyle CommentStyle;
 
 	void RebuildRichText();
+
+	UEdGraphNode_K2PostIt* GetNodeObjAsK2PostIt();
+
+	FReply OnClicked_EditIcon();
 };

@@ -19,6 +19,7 @@ struct FK2PostItBrushes
 	FName Icon_Caret_Right;
 	FName Icon_PlusSign;
 	FName Icon_ProjectSettings_TabIcon;
+	FName Icon_Edit;
 
 	FName Border_K2PostItNode;
 	FName Shadow_K2PostItNode;
@@ -29,6 +30,8 @@ struct FK2PostItBrushes
 	FName CodeHighlightFill;
 
 	FName Separator;
+
+	FName PreviewPaneBorder;
 };
 
 struct FK2PostItStyles
@@ -37,6 +40,8 @@ struct FK2PostItStyles
 	FName ButtonStyle_NoBorder;
 	FName ButtonStyle_HoverHintOnly;
 	FName ButtonStyle_SimpleButton;
+
+	FName ButtonStyle_EditButton;
 
 	FName TextStyle_Editor;
 	FName TextStyle_Normal;
