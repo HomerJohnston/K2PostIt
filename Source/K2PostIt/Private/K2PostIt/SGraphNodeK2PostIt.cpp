@@ -31,11 +31,10 @@
 #include "Styling/ISlateStyle.h"
 #include "Styling/SlateBrush.h"
 #include "Templates/Casts.h"
-//#include "TextWrapperHelpers.h"
-#include "Selection.h"
 #include "TutorialMetaData.h"
 #include "K2PostIt/EdGraphNode_K2PostIt.h"
 #include "K2PostIt/K2PostItColor.h"
+#include "K2PostIt/K2PostItProjectSettings.h"
 #include "K2PostIt/K2PostItStyle.h"
 #include "Types/SlateEnums.h"
 #include "UObject/NameTypes.h"
@@ -45,13 +44,9 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Notifications/SErrorText.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/Input/SMultiLineEditableTextBox.h"
 #include "Widgets/Text/SInlineEditableTextBlock.h"
-#include "SWebBrowserView.h"
-#include "Interfaces/IPluginManager.h"
-#include "K2PostIt/K2PostItDecorator_InlineCode.h"
-#include "K2PostIt/K2PostItDecorator_Separator.h"
-#include "Widgets/SCanvas.h"
 
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Text/SRichTextBlock.h"
@@ -62,7 +57,6 @@ class FDragDropEvent;
 
 namespace SCommentNodeDefs
 {
-
 	/** Size of the hit result border for the window borders */
 	/* L, T, R, B */
 	static const FSlateRect HitResultBorderSize(10,10,10,10);
@@ -141,15 +135,29 @@ void SGraphNodeK2PostIt::Tick( const FGeometry& AllottedGeometry, const double I
 	{
 		bEditButtonClicked = false;
 		PreviewPanelBox->SetContent(SNullWidget::NullWidget);
+		HideQuickColorPalette();
 	}
 	else if (bEditButtonClicked && PreviewPanelRenderOpacity <= 1.0)
 	{
+		if (!bFocusAssigned)
+		{
+			FSlateApplication::Get().SetAllUserFocus(CommentTextSource, EFocusCause::SetDirectly);
+
+			FKeyEvent EndKey(EKeys::End, FModifierKeysState(), 0, false, 0, 0);
+			FSlateApplication::Get().ProcessKeyDownEvent(EndKey);
+			FSlateApplication::Get().ProcessKeyUpEvent(EndKey);
+
+			bFocusAssigned = true;
+		}
+		
 		PreviewPanelRenderOpacity += 5.0f * InDeltaTime;
 		PreviewPanelRenderOpacity = FMath::Clamp(PreviewPanelRenderOpacity, 0.0f, 1.0f);
 
 		if (PreviewPanelWindow.IsValid())
 		{
 			PreviewPanelWindow.Pin()->SetRenderOpacity(PreviewPanelRenderOpacity);
+
+			PreviewPanelBox->SetWidthOverride(MainPanel->GetCachedGeometry().Size.X);
 		}
 	}
 }
@@ -201,6 +209,71 @@ void SGraphNodeK2PostIt::RebuildRichText()
 	}
 }
 
+void SGraphNodeK2PostIt::ShowQuickColorPalette()
+{
+	const float Alpha = 0.95;
+	
+	const TArray<FLinearColor>& Colors = UK2PostItProjectSettings::GetQuickColorPaletteColors();
+	
+	TSharedRef<SHorizontalBox> NewPalette = SNew(SHorizontalBox);
+
+	for (const FLinearColor Color : Colors)
+	{
+		NewPalette->AddSlot()
+		[
+			SNew(SButton)
+			.ButtonStyle(FK2PostItStyle::Get(), K2PostItStyles.ButtonStyle_HoverHintOnly)
+			.ContentPadding(4)
+			.Cursor(EMouseCursor::Default)
+			.OnClicked(this, &SGraphNodeK2PostIt::OnClicked_QuickColorPaletteColor, Color)
+			[
+				SNew(SBox)
+				.WidthOverride(20)
+				.HeightOverride(20)
+				[
+					SNew(SImage)
+					.Image(FK2PostItStyle::GetImageBrush(K2PostItBrushes.Overlay_QuickColorPaletteShadow))
+					.ColorAndOpacity(Color)
+				]
+			]
+		];
+	}
+
+	QuickColorPalette = NewPalette;
+
+	TitleWidgetPanel->AddSlot()
+	.HAlign(HAlign_Right)
+	.VAlign(VAlign_Top)
+	.Padding(0, -44, 0, 0)
+	[
+		QuickColorPalette.ToSharedRef()
+	];
+}
+
+void SGraphNodeK2PostIt::HideQuickColorPalette()
+{
+	if (QuickColorPalette.IsValid())
+	{
+		TitleWidgetPanel->RemoveSlot(QuickColorPalette.ToSharedRef());
+	}
+}
+
+FReply SGraphNodeK2PostIt::OnClicked_QuickColorPaletteColor(const FLinearColor NewColor)
+{
+	UEdGraphNode_K2PostIt* Node = GetNodeObjAsK2PostIt();
+
+	if (Node)
+	{
+		FScopedTransaction Transaction(LOCTEXT("ChangeCommentColor_TransactionText", "Change Comment Color"));
+		Node->CommentColor = NewColor;
+		Node->Modify();
+
+		return FReply::Handled();
+	}
+
+	return FReply::Unhandled();
+}
+
 UEdGraphNode_K2PostIt* SGraphNodeK2PostIt::GetNodeObjAsK2PostIt()
 {
 	return Cast<UEdGraphNode_K2PostIt>(GetNodeObj());
@@ -209,6 +282,7 @@ UEdGraphNode_K2PostIt* SGraphNodeK2PostIt::GetNodeObjAsK2PostIt()
 FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
 {
 	bEditButtonClicked = true;
+	bFocusAssigned = false;
 
 	UEdGraphNode* Node = GetNodeObj();
 
@@ -216,25 +290,29 @@ FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
 
 	TSharedRef<SWindow> NewPreviewPanelWindow = SNew(SWindow)
 	.CreateTitleBar(false)
+	.InitialOpacity(0.0)
 	.SizingRule(ESizingRule::UserSized)
+	.LayoutBorder(8.0f)
 	[
-		SNew(SBorder)
-		.BorderImage( FK2PostItStyle::GetImageBrush(K2PostItBrushes.PreviewPaneBorder))
-		.ColorAndOpacity( FLinearColor::White )
-		.BorderBackgroundColor( this, &SGraphNodeK2PostIt::GetMarkdownPreviewPaneColor )
-		.Padding(8)
+		SNew(SBox)
+		.WidthOverride(120.0f)
 		[
-			FormattedTextPanel.ToSharedRef()
+			SNew(SBorder)
+			.BorderImage( FK2PostItStyle::GetImageBrush(K2PostItBrushes.PreviewPaneBorder))
+			.ColorAndOpacity( FLinearColor::White )
+			.BorderBackgroundColor( this, &SGraphNodeK2PostIt::GetMarkdownPreviewPaneColor )
+			.Padding(8)
+			[
+				FormattedTextPanel.ToSharedRef()
+			]	
 		]
 	];
 
-	NewPreviewPanelWindow->SetRenderOpacity(0.0f);
-	
 	PreviewPanelRenderOpacity = 0.0f;
-	
 	PreviewPanelBox->SetContent(NewPreviewPanelWindow);
-
 	PreviewPanelWindow = NewPreviewPanelWindow;
+
+	ShowQuickColorPalette();
 
 	return FReply::Handled();
 }
@@ -298,9 +376,10 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 			.ForegroundColor(K2PostItColor::DarkGray)
 			.Padding(  FMargin(3.0f) )
 			.AddMetaData<FGraphNodeMetaData>(TagMeta)
+			.ToolTip(nullptr)
 			[
 				SNew(SVerticalBox)
-				.ToolTipText( this, &SGraphNode::GetNodeTooltip )
+				//.ToolTipText( this, &SGraphNode::GetNodeTooltip )
 				+SVerticalBox::Slot()
 				.AutoHeight()
 				.HAlign(HAlign_Fill)
@@ -327,19 +406,23 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 					.HAlign(HAlign_Fill)
 					.VAlign(VAlign_Center)
 					[
-						SAssignNew(InlineEditableText, SInlineEditableTextBlock)
-						.Style( &CommentStyle )
-						.ColorAndOpacity(FSlateColor::UseForeground())
-						.ShadowOffset(0)
-						.ShadowColorAndOpacity(K2PostItColor::Transparent)
-						.Text( this, &SGraphNodeK2PostIt::GetEditableNodeTitleAsText )
-						.OnVerifyTextChanged(this, &SGraphNodeK2PostIt::OnVerifyNameTextChanged)
-						.OnTextCommitted(this, &SGraphNodeK2PostIt::OnNameTextCommited)
-						.IsReadOnly( this, &SGraphNodeK2PostIt::IsNameReadOnly )
-						.IsSelected( this, &SGraphNodeK2PostIt::IsSelectedExclusively )
-						.WrapTextAt( this, &SGraphNodeK2PostIt::GetWrapAt )
-						.MultiLine(true)
-						.ModiferKeyForNewLine(EModifierKey::Shift)
+						SAssignNew(TitleWidgetPanel, SOverlay)
+						+ SOverlay::Slot()
+						[
+							SAssignNew(InlineEditableText, SInlineEditableTextBlock)
+							.Style( &CommentStyle )
+							.ColorAndOpacity(FSlateColor::UseForeground())
+							.ShadowOffset(0)
+							.ShadowColorAndOpacity(K2PostItColor::Transparent)
+							.Text( this, &SGraphNodeK2PostIt::GetEditableNodeTitleAsText )
+							.OnVerifyTextChanged(this, &SGraphNodeK2PostIt::OnVerifyNameTextChanged)
+							.OnTextCommitted(this, &SGraphNodeK2PostIt::OnNameTextCommited)
+							.IsReadOnly( this, &SGraphNodeK2PostIt::IsNameReadOnly )
+							.IsSelected( this, &SGraphNodeK2PostIt::IsSelectedExclusively )
+							.WrapTextAt( this, &SGraphNodeK2PostIt::GetWrapAt )
+							.MultiLine(true)
+							.ModiferKeyForNewLine(EModifierKey::Shift)	
+						]
 					]
 				]
 				+ SVerticalBox::Slot()
@@ -360,91 +443,108 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 				.HAlign(HAlign_Fill)
 				.VAlign(VAlign_Fill)
 				[
-					SNew(SWidgetSwitcher)
-					.WidgetIndex_Lambda( [this] ()
-					{
-						const uint8 EditMode = 0;
-						const uint8 MarkupMode = 1;
-
-						if (GetNodeObjAsK2PostIt()->bDisableMarkdownRendering)
-						{
-							return EditMode;
-						}
-
-						if (bEditButtonClicked && bIsSelected)
-						{
-							return EditMode;
-						}
-						
-						if (CommentTextSource->HasKeyboardFocus())
-						{
-							return EditMode;
-						}
-						
-						return MarkupMode;
-					} )
-					+ SWidgetSwitcher::Slot()
-					.HAlign(HAlign_Fill)
-					.VAlign(VAlign_Fill)
+					SNew(SBox)
+					.MinDesiredHeight(33)
 					[
-						SNew(SOverlay)
-						+ SOverlay::Slot()
-						[
-							SNew(SBorder)
-							.BorderImage( FAppStyle::GetBrush("NoBorder") )
-							.ForegroundColor_Lambda( [this] ()
-							{
-								FLinearColor Color = K2PostItColor::Noir;
+						SNew(SWidgetSwitcher)
+						.WidgetIndex_Lambda( [this] ()
+						{
+							const uint8 EditMode = 0;
+							const uint8 MarkupMode = 1;
 
-								UEdGraphNode_K2PostIt* Owner = GetNodeObjAsK2PostIt();
-								
-								if (IsValid(Owner))
+							if (UK2PostItProjectSettings::GetMarkdownDisabledByDefault())
+							{
+								if (!GetNodeObjAsK2PostIt()->bEnableMarkdownRendering)
 								{
-									Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
+									return EditMode;
 								}
-								
-								return Color;
-							})
-							.VAlign(VAlign_Fill)
-							.Padding(4, 8, 4, 8)
+							}
+							else
+							{
+								if (GetNodeObjAsK2PostIt()->bDisableMarkdownRendering)
+								{
+									return EditMode;
+								}
+							}
+	
+							if ((bEditButtonClicked && bIsSelected) || CommentTextSource->HasKeyboardFocus())
+							{
+								return EditMode;
+							}
+							
+							return MarkupMode;
+						} )
+						+ SWidgetSwitcher::Slot()
+						.HAlign(HAlign_Fill)
+						.VAlign(VAlign_Fill)
+						[
+							SNew(SOverlay)
+							+ SOverlay::Slot()
 							[
-								SAssignNew(CommentTextSource, SMultiLineEditableText)
-								.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
-								.Text(this, &SGraphNodeK2PostIt::GetCommentText)
-								.OnTextChanged(this, &SGraphNodeK2PostIt::OnPostItCommentTextChanged)
-								//.OnTextCommitted(this, &SGraphNodeK2PostIt::OnPostItCommentTextCommitted)
+								SNew(SBorder)
+								.BorderImage( FAppStyle::GetBrush("NoBorder") )
+								.ForegroundColor_Lambda( [this] ()
+								{
+									FLinearColor Color = K2PostItColor::Noir;
+
+									UEdGraphNode_K2PostIt* Owner = GetNodeObjAsK2PostIt();
+									
+									if (IsValid(Owner))
+									{
+										Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
+									}
+									
+									return Color;
+								})
+								.VAlign(VAlign_Fill)
+								.Padding(4, 8, 4, 8)
+								[
+									SAssignNew(CommentTextSource, SMultiLineEditableText)
+									.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
+									.Text(this, &SGraphNodeK2PostIt::GetCommentText)
+									.OnTextChanged(this, &SGraphNodeK2PostIt::OnPostItCommentTextChanged)
+									//.OnTextCommitted(this, &SGraphNodeK2PostIt::OnPostItCommentTextCommitted)
+								]
+							]
+							+ SOverlay::Slot()
+							.HAlign(HAlign_Left)
+							.VAlign(VAlign_Top)
+							.Padding(PaddingAttribute_PreviewPane)
+							[
+								SAssignNew(PreviewPanelBox, SBox)
 							]
 						]
-						+ SOverlay::Slot()
-						.HAlign(HAlign_Left)
-						.VAlign(VAlign_Top)
-						.Padding(PaddingAttribute_PreviewPane)
+						+ SWidgetSwitcher::Slot()
+						.Padding(8)
+						.HAlign(HAlign_Fill)
+						.VAlign(VAlign_Fill)
 						[
-							SAssignNew(PreviewPanelBox, SBox)
-						]
-					]
-					+ SWidgetSwitcher::Slot()
-					.Padding(8)
-					.HAlign(HAlign_Fill)
-					.VAlign(VAlign_Fill)
-					[
-						SNew(SOverlay)
-						+ SOverlay::Slot()
-						[
-							FormattedTextPanel.ToSharedRef()
-						]
-						+ SOverlay::Slot()
-						.HAlign(HAlign_Right)
-						.VAlign(VAlign_Top)
-						[
-							SNew(SButton)
-							.ButtonStyle(FK2PostItStyle::Get(), K2PostItStyles.ButtonStyle_EditButton)
-							.ContentPadding(0)
-							.OnClicked(this, &SGraphNodeK2PostIt::OnClicked_EditIcon)
+							SNew(SOverlay)
+							+ SOverlay::Slot()
 							[
-								SNew(SImage)
-								.Image(FK2PostItStyle::GetImageBrush(K2PostItBrushes.Icon_Edit))
-								.ColorAndOpacity(FSlateColor::UseForeground())
+								FormattedTextPanel.ToSharedRef()
+							]
+							+ SOverlay::Slot()
+							.HAlign(HAlign_Right)
+							.VAlign(VAlign_Top)
+							.Padding(0, 0, 0, -999)
+							[
+								SNew(SButton)
+								.ButtonStyle(FK2PostItStyle::Get(), K2PostItStyles.ButtonStyle_EditButton)
+								.ContentPadding(0)
+								.OnClicked(this, &SGraphNodeK2PostIt::OnClicked_EditIcon)
+								.Cursor(EMouseCursor::Default)
+								.Visibility_Lambda( [this] () { return IsHovered() ? EVisibility::Visible : EVisibility::Collapsed; } )
+								[
+									SNew(SBorder)
+									.BorderImage(FAppStyle::GetBrush("Icons.FilledCircle"))
+									.Padding(8)
+									[
+										SNew(SImage)
+										.Image(FK2PostItStyle::GetImageBrush(K2PostItBrushes.Icon_Edit))
+										.ColorAndOpacity(FSlateColor::UseForeground())
+									]
+								]
 							]
 						]
 					]

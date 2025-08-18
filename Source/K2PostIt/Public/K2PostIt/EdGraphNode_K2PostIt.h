@@ -33,31 +33,6 @@ typedef TArray<class UObject*> FCommentNodeSet;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRegexPatternUpdated);
 
-UCLASS()
-class K2POSTIT_API UK2PostItMarkdownBinding : public UObject
-{
-	GENERATED_BODY()
-
-public:
-
-	UFUNCTION()
-	FText GetText() { return Text; }
-
-	UFUNCTION()
-	void SetText( FText text ) { Text = text; OnSetText.Broadcast(); }
-
-	UFUNCTION()
-	void OpenURL( FString URL );
-
-	UFUNCTION()
-	void OpenAsset( FString URL );
-
-	DECLARE_EVENT( UK2PostItMarkdownBinding, FOnSetTextEvent )
-	FOnSetTextEvent OnSetText;
-
-	FText Text;
-};
-
 // ================================================================================================
 
 USTRUCT()
@@ -165,26 +140,25 @@ public:
 	UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/** Color to style comment with */
-	UPROPERTY(EditAnywhere, Category=Comment)
+	UPROPERTY(EditAnywhere, Category = "Comment")
 	FLinearColor CommentColor;
 
-	UPROPERTY(EditAnywhere, Category=Comment)
+	UPROPERTY(EditAnywhere, Category = "Comment")
 	bool bDisableMarkdownRendering = false;
+
+	UPROPERTY(EditAnywhere, Category = "Comment")
+	bool bEnableMarkdownRendering = false;
 	
 	/** Size of the text in the comment box */
-	UPROPERTY(EditAnywhere, Category=Comment, meta=(ClampMin=8, ClampMax=64))
+	UPROPERTY(EditAnywhere, Category = "Comment", meta=(ClampMin=8, ClampMax=64))
 	int32 TitleFontSize;
-
-	/** Currently nonfunctional */
-	UPROPERTY(VisibleAnywhere, Category=Comment, meta=(ClampMin=8, ClampMax=32))
-	int32 ContentFontSize;
 	
 	/** Whether to show a zoom-invariant comment bubble when zoomed out (making the comment readable at any distance). */
-	UPROPERTY(EditAnywhere, Category=Comment, meta=(DisplayName="Show Bubble When Zoomed"))
+	UPROPERTY(EditAnywhere, Category = "Comment", meta=(DisplayName="Show Bubble When Zoomed"))
 	uint32 bCommentBubbleVisible_InDetailsPanel:1;
 
 	/** Whether to use Comment Color to color the background of the comment bubble shown when zoomed out. */
-	UPROPERTY(EditAnywhere, Category=Comment, meta=(DisplayName="Color Bubble", EditCondition=bCommentBubbleVisible_InDetailsPanel))
+	UPROPERTY(EditAnywhere, Category = "Comment", meta=(DisplayName="Color Bubble", EditCondition = "bCommentBubbleVisible_InDetailsPanel"))
 	uint32 bColorCommentBubble:1;
 
 	/** comment Depth */
@@ -205,7 +179,6 @@ public:
 	virtual bool IsSelectedInEditor() const override;
 
 	void PostLoad() override;
-	
 	//~ End UObject Interface
 
 	//~ Begin UEdGraphNode Interface

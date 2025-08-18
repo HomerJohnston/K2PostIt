@@ -66,7 +66,8 @@ TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<cla
 TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const FTextRunInfo& RunInfo, const FTextBlockStyle& DefaultTextStyle) const
 {
 	return SNew(SBox)
-	.Padding(0, -3, 0, -3)
+	.Padding(0, 0, 0, 0)
+	.VAlign(VAlign_Center)
 	[
 		SNew(SBorder)
 		.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightFill))
@@ -98,6 +99,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 		[
 			SNew(SBorder)
 			.Padding(2, 1, 2, 1)
+			.VAlign(VAlign_Bottom)
 			.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightBorder))
 			.BorderBackgroundColor_Lambda( [this] ()
 			{
@@ -116,7 +118,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 				.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_CodeBlock)
 				.DecoratorStyleSet( &FK2PostItStyle::Get() )
 				.Text(RunInfo.Content)
-				.LineHeightPercentage(1.1f)
+				.LineHeightPercentage(1.0f) // TODO this should be a global 
 				.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
 				.AutoWrapText(true)
 				/*

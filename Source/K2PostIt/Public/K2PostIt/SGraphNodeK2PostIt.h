@@ -127,6 +127,7 @@ private:
 	bool bMouseClickEditingInterlock = false;
 
 	bool bEditButtonClicked = false;
+	bool bFocusAssigned = false;
 
 	float PreviewPanelRenderOpacity = 0.0f;
 	
@@ -141,10 +142,14 @@ private:
 	TSharedPtr<SBox> PreviewPanelBox;
 
 	TWeakPtr<SWindow> PreviewPanelWindow;
-	
+
 	TSharedPtr<SWebBrowserView> WebBrowser;
 
 	TSharedPtr<SVerticalBox> FormattedTextPanel;
+
+	TSharedPtr<SWidget> QuickColorPalette;
+
+	TSharedPtr<SOverlay> TitleWidgetPanel;
 	
 	FMargin Padding_MarkdownPreviewPanel() const;
 
@@ -166,6 +171,12 @@ private:
 	FInlineEditableTextBlockStyle CommentStyle;
 
 	void RebuildRichText();
+	
+	void ShowQuickColorPalette();
+
+	void HideQuickColorPalette();
+	
+	FReply OnClicked_QuickColorPaletteColor(const FLinearColor NewColor);
 
 	UEdGraphNode_K2PostIt* GetNodeObjAsK2PostIt();
 

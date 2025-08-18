@@ -1,7 +1,4 @@
-// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
-// This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
-
-// This file is formatted to be viewable on tabs, 4-space tabs. If you use another setting, sorry!
+// Creative commons / unlicensed. Do whatever you want with this.
 
 #include "K2PostIt/K2PostItStyle.h"
 
@@ -196,6 +193,8 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			Separator,							"Box_1px_White", ".png", FMargin(0.5));
 
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			PreviewPaneBorder,					"Border_MarkdownPreviewPane", ".png", FMargin(0.5));
+	
+	K2POSTIT_DEFINE_BRUSH(FSlateImageBrush,			Overlay_QuickColorPaletteShadow,					"Overlay_QuickColorPaletteShadow", ".png", FVector2f(20, 20));
 	// ============================================================================================
 	// BRUSHES - SVGs
 	// ============================================================================================
@@ -222,7 +221,7 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_HoverHintOnly, FAppStyle::Get().GetWidgetStyle<FButtonStyle>("HoverHintOnly"), );
 	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_SimpleButton, FAppStyle::Get().GetWidgetStyle<FButtonStyle>("SimpleButton"), );
 
-	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_EditButton, ButtonStyle_HoverHintOnly,
+	K2POSTIT_DEFINE_STYLE(FButtonStyle, ButtonStyle_EditButton, ButtonStyle_NoBorder,
 		//.SetNormal(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::Gray))
 		//.SetHovered(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::White))
 		//.SetPressed(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::DarkGray))
@@ -312,7 +311,7 @@ void FK2PostItStyle::Initialize_Internal()
 	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_CodeBlock, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalText"),
 		.SetColorAndOpacity(FSlateColor::UseForeground())
 		.SetFont(Consolas10)
-		.SetFontSize(DefaultSize)
+		.SetFontSize(DefaultSize - 1)
 		);
 	
 	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_Underlined, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalUnderlinedText"),
@@ -320,6 +319,11 @@ void FK2PostItStyle::Initialize_Internal()
 		.SetFontSize(DefaultSize)
 		);
 
+	K2POSTIT_DEFINE_STYLE(FTextBlockStyle, TextStyle_CommonURL, GetParentStyle()->GetWidgetStyle<FTextBlockStyle>("NormalUnderlinedText"),
+		.SetColorAndOpacity(K2PostItColor::Blue)
+		.SetFontSize(DefaultSize)
+		);
+	
 	//StyleInstance->Set("RichTextBlock.TextHighlight", FTextBlockStyle(TextStyle_Normal));
 	
 	//StyleInstance->Set("RichTextBlock.Bold", FTextBlockStyle(TextStyle_Normal));
@@ -359,7 +363,7 @@ void FK2PostItStyle::Initialize_Internal()
 		.SetFont(DEFAULT_FONT("Normal", DefaultSize * 0.5)));
 
 	StyleInstance->Set("K2PostIt.Code", FTextBlockStyle(TextStyle_Normal)
-		.SetFont(DEFAULT_FONT("Normal", DefaultSize)));
+		.SetFont(DEFAULT_FONT("Normal", DefaultSize - 2)));
 
 	// ============================================================================================
 	// EDITABLE TEXT BLOCK STYLES
@@ -390,6 +394,21 @@ void FK2PostItStyle::Initialize_Internal()
 		.SetEnableFillAnimation(false)
 	);
 	*/
+
+	// ============================================================================================
+	// HYPERLINK STYLES
+	// ============================================================================================
+
+	K2POSTIT_DEFINE_STYLE(FHyperlinkStyle, K2PostItCommonHyperlink, GetParentStyle()->GetWidgetStyle<FHyperlinkStyle>("Hyperlink"),
+	.SetTextStyle(TextStyle_CommonURL));
+	
+	//StyleInstance->Set("K2PostItHyperlink")
+	//&FCoreStyle::Get().GetWidgetStyle< FHyperlinkStyle >("Hyperlink")
+
+	// ============================================================================================
+	// OTHER
+	// ============================================================================================
+
 	
 	StyleInstance->Set("K2PostItEditor.PluginAction", new FSlateVectorImageBrush(StyleInstance->RootToContentDir(L"K2PostItProjectSettings", TEXT(".svg")), CoreStyleConstants::Icon20x20));
 }

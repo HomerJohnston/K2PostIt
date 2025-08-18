@@ -22,7 +22,9 @@
 
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItDecorator_InlineCode.h"
+#include "K2PostIt/K2PostItProjectSettings.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "K2PostIt/Globals/K2PostItFunctions.h"
 
 class UEdGraphPin;
 
@@ -52,16 +54,6 @@ namespace FEdGraphNode_K2PostIt_Utils
 /////////////////////////////////////////////////////
 // UEdGraphNode_K2PostIt
 
-void UK2PostItMarkdownBinding::OpenURL(FString URL)
-{
-	FPlatformProcess::LaunchURL( *URL, nullptr, nullptr );
-}
-
-void UK2PostItMarkdownBinding::OpenAsset(FString URL)
-{
-	//MarkdownAssetStatics::TryToOpenAsset(URL);
-}
-
 TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 {
 	return SNew(SBorder)
@@ -83,10 +75,11 @@ TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
 		.DecoratorStyleSet( &FK2PostItStyle::Get() )
 		.Text(FText::FromString(Text))
-		.LineHeightPercentage(1.1f)
+		.LineHeightPercentage(1.3f)
 		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
 		.AutoWrapText(true)
 		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
+		+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
 	];
 }
 
@@ -219,7 +212,6 @@ UEdGraphNode_K2PostIt::UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectIni
 	NodeWidth = 400;
 	NodeHeight = 100;
 	TitleFontSize = 18;
-	ContentFontSize = 12;
 	CommentColor = FLinearColor(1.0, 0.95, 0.66, 0.95);
 
 	bColorCommentBubble = false;
@@ -231,7 +223,6 @@ UEdGraphNode_K2PostIt::UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectIni
 	bCanRenameNode = true;
 	CommentDepth = -1;
 }
-
 
 void UEdGraphNode_K2PostIt::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector) 
 {
@@ -253,7 +244,6 @@ void UEdGraphNode_K2PostIt::PostEditChangeProperty(FPropertyChangedEvent& Proper
 	}
 	
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-	//ReconstructNode();
 }
 
 void UEdGraphNode_K2PostIt::PostPlacedNewNode()
@@ -267,6 +257,7 @@ void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 	FEdGraphNode_K2PostIt_Utils::SyncPropertyToValue(this, NodeClass->FindPropertyByName(GET_MEMBER_NAME_CHECKED(UEdGraphNode_K2PostIt, bCommentBubbleVisible_InDetailsPanel)), GraphEditorSettings->bShowCommentBubbleWhenZoomedOut);
 
 	NodeComment = NSLOCTEXT("K2Node", "CommentBlock_NewEmptyComment", "Comment").ToString();
+	CommentColor = GetDefault<UEdGraphNode_K2PostIt>()->CommentColor; // For some reason Unreal keeps making the new instance white. Blah.
 }
 
 FText UEdGraphNode_K2PostIt::GetTooltipText() const
@@ -452,7 +443,7 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 	ProcessTextBlocks(SeparatorBlockRegex, SeparatorBlockParser);
 
 
-	FString CodeBlockRegex = R"((?<=[^`]|^)((?:\r?\n)?```)(?:\r?\n)?([\s\S]*?)(?:\r?\n)?\1(\r?\n)?)";
+	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:\r?\n)?([\s\S]*?)(?:\r?\n)?\1(\r?\n)?)";
 	
 	SomeFunc CodeBlockParser = [this] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
@@ -536,9 +527,34 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 			// Do not run these within code blocks!
 			if (TempBlock.GetScriptStruct() != FK2PostIt_CodeBlock::StaticStruct())
 			{
+				// https:// Website browser link
+				{
+					const FRegexPattern Pattern(TEXT(R"((?:^|\s)((?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/\S*)?))"));
+					FRegexMatcher Matcher(Pattern, Text);
+					while (Matcher.FindNext())
+					{
+						FString URL = Matcher.GetCaptureGroup(1);
+						FString Replacement = FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *URL);
+						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					}
+				}
+				
+				// [label](url) Website browser link
+				{
+					const FRegexPattern Pattern(TEXT(R"(\[(.*?)\]\((.*?)\))"));
+					FRegexMatcher Matcher(Pattern, Text);
+					while (Matcher.FindNext())
+					{
+						FString Label = Matcher.GetCaptureGroup(1);
+						FString URL = Matcher.GetCaptureGroup(2);
+						FString Replacement = FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *Label);
+						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+					}
+				}
+				
 				// `text` Code
 				{
-					const FRegexPattern Pattern(TEXT(R"((?m)`(.+?)`)"));
+					const FRegexPattern Pattern(TEXT(R"(`(.+?)`)"));
 					FRegexMatcher Matcher(Pattern, Text);
 					while (Matcher.FindNext())
 					{
@@ -551,7 +567,7 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 				
 				// **text** Bold
 				{
-					const FRegexPattern Pattern(TEXT(R"((?m)\*\*(.+?)\*\*)"));
+					const FRegexPattern Pattern(TEXT(R"(\*\*(.+?)\*\*)"));
 					FRegexMatcher Matcher(Pattern, Text);
 					while (Matcher.FindNext())
 					{
@@ -564,7 +580,7 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 
 				// __text__ Underline
 				{
-					const FRegexPattern Pattern(TEXT(R"((?m)__(.+?)__)"));
+					const FRegexPattern Pattern(TEXT(R"(__(.+?)__)"));
 					FRegexMatcher Matcher(Pattern, Text);
 					while (Matcher.FindNext())
 					{
@@ -577,7 +593,7 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 			
 				// _text_ Italic
 				{
-					const FRegexPattern Pattern(TEXT(R"((?m)_(.+?)_)"));
+					const FRegexPattern Pattern(TEXT(R"(_(.+?)_)"));
 					FRegexMatcher Matcher(Pattern, Text);
 					while (Matcher.FindNext())
 					{

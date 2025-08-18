@@ -32,6 +32,8 @@ struct FK2PostItBrushes
 	FName Separator;
 
 	FName PreviewPaneBorder;
+
+	FName Overlay_QuickColorPaletteShadow;
 };
 
 struct FK2PostItStyles
@@ -46,7 +48,10 @@ struct FK2PostItStyles
 	FName TextStyle_Editor;
 	FName TextStyle_Normal;
 	FName TextStyle_Underlined;
+	FName TextStyle_CommonURL;
 	FName TextStyle_CodeBlock;
+
+	FName K2PostItCommonHyperlink;
 };
 
 struct FK2PostItFonts
