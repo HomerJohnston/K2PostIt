@@ -48,6 +48,7 @@ public:
 	virtual ~FK2PostIt_BaseBlock() {};
 	
 protected:
+	UPROPERTY()
 	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
 
 public:

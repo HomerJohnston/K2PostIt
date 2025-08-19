@@ -7,8 +7,6 @@
 class K2POSTIT_API  FK2PostItDecorator_Separator : public ITextDecorator
 {
 public:
-	FK2PostItDecorator_Separator(const FTextBlockStyle& Style);
-
 	FK2PostItDecorator_Separator(FString InName, const FSlateColor& InColor);
 	
 	bool Supports( const FTextRunParseResults& RunInfo, const FString& Text ) const override;

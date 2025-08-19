@@ -9,8 +9,6 @@ class UEdGraphNode_K2PostIt;
 class K2POSTIT_API  FK2PostItDecorator_InlineCode : public ITextDecorator
 {
 public:
-    FK2PostItDecorator_InlineCode(const FTextBlockStyle& Style);
-
 	FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner);
 	
 	bool Supports( const FTextRunParseResults& RunInfo, const FString& Text ) const override;

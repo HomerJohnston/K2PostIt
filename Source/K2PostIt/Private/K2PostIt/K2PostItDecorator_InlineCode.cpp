@@ -9,12 +9,6 @@
 #include "K2PostIt/K2PostItStyle.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
-
-FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(const FTextBlockStyle& Style)
-	:	TextStyle(Style)
-{
-}
-
 FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner)
 	: TextStyle(FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal))
 {
