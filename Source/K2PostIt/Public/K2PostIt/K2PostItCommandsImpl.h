@@ -48,6 +48,8 @@ public:
 	
 	static void OnCreateComment()
 	{
+		//FBlueprintEditorModule& BlueprintEditorModule = FModuleManager::GetModuleChecked<FBlueprintEditorModule>("Kismet");
+
 		UE_LOG(LogTemp, Display, TEXT("On Creat Comment works!"));
 		/*
 		TSharedPtr<SGraphEditor> GraphEditor = FocusedGraphEdPtr.Pin();

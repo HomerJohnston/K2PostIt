@@ -339,8 +339,8 @@ void FK2PostItStyle::Initialize_Internal()
 	StyleInstance->Set("K2PostIt.Underline", FTextBlockStyle(TextStyle_Underlined)
 		.SetFont(DEFAULT_FONT("Normal", DefaultSize)));
 
-	StyleInstance->Set("K2PostIt.ItalicHighlight", FTextBlockStyle(TextStyle_Normal)
-		.SetFont(DEFAULT_FONT("Italic", DefaultSize)));
+	StyleInstance->Set("K2PostIt.BoldItalic", FTextBlockStyle(TextStyle_Normal)
+		.SetFont(DEFAULT_FONT("BoldItalic", DefaultSize)));
 
 	StyleInstance->Set("K2PostIt.Header1", FTextBlockStyle(TextStyle_Normal)
 		.SetFont(DEFAULT_FONT("Bold", DefaultSize + 4)));

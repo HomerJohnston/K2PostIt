@@ -20,11 +20,16 @@
 #include <string>
 #include <Widgets/Text/SRichTextBlock.h>
 
+#include "BlueprintActionDatabaseRegistrar.h"
+#include "BlueprintNodeSpawner.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItDecorator_InlineCode.h"
 #include "K2PostIt/K2PostItProjectSettings.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "K2PostIt/Globals/K2PostItConstants.h"
 #include "K2PostIt/Globals/K2PostItFunctions.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
 
 class UEdGraphPin;
 
@@ -75,7 +80,7 @@ TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
 		.DecoratorStyleSet( &FK2PostItStyle::Get() )
 		.Text(FText::FromString(Text))
-		.LineHeightPercentage(1.3f)
+		.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
 		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
 		.AutoWrapText(true)
 		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
@@ -87,7 +92,7 @@ TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 {
 	return SNew(SBox)
 	.HAlign(HAlign_Fill)
-	.Padding(18, 12, 18, 12)
+	.Padding(K2PostIt::Constants::Separator_SidePadding, K2PostIt::Constants::Separator_TopPadding, K2PostIt::Constants::Separator_SidePadding, K2PostIt::Constants::Separator_BottomPadding)
 	[
 		SNew(SSeparator)
 		.Thickness(2)
@@ -96,7 +101,7 @@ TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 		{
 			if (Owner.IsValid())
 			{
-				if (Owner->CommentColor.GetLuminance() < 0.1)
+				if (Owner->CommentColor.GetLuminance() < K2PostIt::Constants::LuminanceDarkModeThreshold)
 				{
 					return K2PostItColor::DimWhite_SemiGlass;
 				}
@@ -110,9 +115,9 @@ TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 {
 	return SNew(SBox)
-	.Padding(0, 4, 0, 8)
+	.Padding(0, K2PostIt::Constants::CodeBlock_TopPadding, 0, K2PostIt::Constants::CodeBlock_BottomPadding)
 	[
-		// TODO this duplicates code with K2PostItDecorator_InlineCode, I should pull out into something common
+		// TODO this duplicates some code with K2PostItDecorator_InlineCode, I should pull out into something common
 		SNew(SBorder)
 		.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightFill))
 		.ForegroundColor_Lambda( [this] ()
@@ -133,7 +138,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 			if (Owner.IsValid())
 			{
 				float Alpha = Color.A;
-				Color = Owner->CommentColor * 5;
+				Color = Owner->CommentColor * K2PostIt::Constants::CodeBlock_BorderBackgroundColorMulti;
 				Color.A = Alpha;
 			}
 			
@@ -142,7 +147,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 		.Padding(0)
 		[
 			SNew(SBorder)
-			.Padding(8, 8)
+			.Padding(K2PostIt::Constants::CodeBlock_InternalPadding)
 			.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.CodeHighlightBorder))
 			.BorderBackgroundColor_Lambda( [this] ()
 			{
@@ -150,7 +155,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 	
 				if (Owner.IsValid())
 				{
-					float Lum = Owner->CommentColor.GetLuminance() + 0.15;
+					float Lum = Owner->CommentColor.GetLuminance() + K2PostIt::Constants::CodeBlock_BorderBrighten;
 					Color = FLinearColor(Lum, Lum, Lum, 1.0f);
 				}
 			
@@ -161,7 +166,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 				.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_CodeBlock)
 				.DecoratorStyleSet( &FK2PostItStyle::Get() )
 				.Text(FText::FromString(Text))
-				.LineHeightPercentage(1.1f)
+				.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
 				.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
 				.AutoWrapText(true)	
 			]	
@@ -172,8 +177,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 {
 	const FString Bullets[3] { TEXT("\u2756"), TEXT("\u25CF"), TEXT("\u25CB")};
-	//const FName Styles[3] { K2PostItStyles.TextStyle_Normal, K2PostItStyles.}
-	const float IndentFactor = 16;
+	const float IndentFactor = K2PostIt::Constants::BulletIndentFactor;
 	const int32 SpacesPerIndent = 2;
 	
 	int32 EffectiveIndentLevel = FMath::Clamp(IndentLevel / SpacesPerIndent, 0, 2);
@@ -199,10 +203,11 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
 		.DecoratorStyleSet( &FK2PostItStyle::Get() )
 		.Text(FText::FromString(EffectiveText))
-		.LineHeightPercentage(1.1f)
+		.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
 		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
 		.AutoWrapText(true)
 		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
+		+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
 	];
 }
 
@@ -258,10 +263,16 @@ void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 
 	NodeComment = NSLOCTEXT("K2Node", "CommentBlock_NewEmptyComment", "Comment").ToString();
 	CommentColor = GetDefault<UEdGraphNode_K2PostIt>()->CommentColor; // For some reason Unreal keeps making the new instance white. Blah.
+
+	FSlateApplication::Get().SetAllUserFocus(SNullWidget::NullWidget, EFocusCause::SetDirectly);
 }
 
 FText UEdGraphNode_K2PostIt::GetTooltipText() const
 {
+	if (NodeComment.IsEmpty())
+	{
+		return NSLOCTEXT("K2Node", "K2PostItCommentBlock_Tooltip", "Hold Shift+C and click to place");
+	}
 	if (CachedTooltip.IsOutOfDate(this))
 	{
 		CachedTooltip.SetCachedText(FText::Format(NSLOCTEXT("K2Node", "CommentBlock_Tooltip", "Comment:\n{0}"), FText::FromString(NodeComment)), this);
@@ -290,6 +301,41 @@ FSlateIcon UEdGraphNode_K2PostIt::GetIconAndTint(FLinearColor& OutColor) const
 TSharedPtr<SGraphNode> UEdGraphNode_K2PostIt::CreateVisualWidget()
 {
 	return SNew(SGraphNodeK2PostIt, this);
+}
+
+void UEdGraphNode_K2PostIt::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
+{
+	UBlueprintNodeSpawner* NodeSpawner = UBlueprintNodeSpawner::Create(UEdGraphNode_K2PostIt::StaticClass());
+
+	check(NodeSpawner);
+
+	auto CustomizeMessageNodeLambda = [] (UEdGraphNode* NewNode, bool bIsTemplateNode)
+	{
+		UEdGraph* OuterGraph = NewNode->GetGraph();
+		check(OuterGraph != nullptr);
+		UBlueprint* Blueprint = FBlueprintEditorUtils::FindBlueprintForGraph(OuterGraph);
+		check(Blueprint != nullptr);
+
+		const float OldNodePosX = static_cast<float>(NewNode->NodePosX);
+		const float OldNodePosY = static_cast<float>(NewNode->NodePosY);
+		const float OldHalfHeight = NewNode->NodeHeight / 2.f;
+		const float OldHalfWidth  = NewNode->NodeWidth  / 2.f;
+		
+		static const float DocNodePadding = 50.0f;
+		FSlateRect Bounds(OldNodePosX - OldHalfWidth, OldNodePosY - OldHalfHeight, OldNodePosX + OldHalfWidth, OldNodePosY + OldHalfHeight);
+		FKismetEditorUtilities::GetBoundsForSelectedNodes(Blueprint, Bounds, DocNodePadding);
+	};
+
+	NodeSpawner->CustomizeNodeDelegate = UBlueprintNodeSpawner::FCustomizeNodeDelegate::CreateStatic(CustomizeMessageNodeLambda);
+
+	NodeSpawner->DefaultMenuSignature.MenuName = INVTEXT("Add Comment (K2PostIt)...");
+
+	UClass* ActionKey = GetClass();
+	
+	if (ActionRegistrar.IsOpenForRegistration(ActionKey))
+	{
+		ActionRegistrar.AddBlueprintAction(ActionKey, NodeSpawner);
+	}
 }
 
 FText UEdGraphNode_K2PostIt::GetNodeTitle(ENodeTitleType::Type TitleType) const
@@ -346,6 +392,7 @@ bool UEdGraphNode_K2PostIt::IsSelectedInEditor() const
 	{
 		return Super::IsSelectedInEditor();
 	}
+	
 	return SelectionState == ESelectionState::Selected;
 }
 
@@ -414,48 +461,40 @@ void UEdGraphNode_K2PostIt::ProcessTextBlocks(FString RegexPattern, SomeFunc F)
 
 			if (ReplacementBlocks.Num() > 0)
 			{
-				Blocks.RemoveAt(i);
+				Blocks.RemoveAt(i, EAllowShrinking::No);
 				Blocks.Insert(ReplacementBlocks, i);
 				i += ReplacementBlocks.Num() - 1;
 			}
 		}
-
-		
 	}
 }
+
 
 void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 {
 	Blocks.Empty();
 
 	Blocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_TextBlock>(this, PeasantText.ToString()));
+
 	
-	// ==========================================
-	// The more difficult stuff. Break up into chunks. We do this first because it's annoying to find `Stuff` without wrecking ```Stuff``` (but I should fix this one day)
-
 	FString SeparatorBlockRegex = R"((?m)(\r?\n)?^---{1,}$(\r?\n)?)";
-
 	SomeFunc SeparatorBlockParser = [this] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_SeparatorBlock>(this));
 	};
-
 	ProcessTextBlocks(SeparatorBlockRegex, SeparatorBlockParser);
 
 
 	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:\r?\n)?([\s\S]*?)(?:\r?\n)?\1(\r?\n)?)";
-	
 	SomeFunc CodeBlockParser = [this] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		FString Code = Matcher.GetCaptureGroup(2);
 		ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_CodeBlock>(this, Code));
 	};
-	
 	ProcessTextBlocks(CodeBlockRegex, CodeBlockParser);
 
 
 	FString BulletBlockRegex = R"((?m)(?:\r?\n)?^( {0}| {2}| {4})(-)\s(.*)$(?:\r?\n)?)";
-
 	SomeFunc BulletBlockParser = [this] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		int32 HyphenCount = Matcher.GetCaptureGroup(1).Len();
@@ -464,7 +503,6 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 		
 		ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_BulletBlock>(this, HyphenCount, BulletText));
 	};
-
 	ProcessTextBlocks(BulletBlockRegex, BulletBlockParser);
 
 	
@@ -472,138 +510,269 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 	
 	for (int32 i = 0; i < Blocks.Num(); ++i)
 	{
-		TInstancedStruct<FK2PostIt_BaseBlock>& TempBlock = Blocks[i];
+		TInstancedStruct<FK2PostIt_BaseBlock>& CurrentBlock = Blocks[i];
 
-		if (TempBlock.GetScriptStruct()->IsChildOf(FK2PostIt_TextBlock::StaticStruct()))
+		if (CurrentBlock.GetScriptStruct()->IsChildOf(FK2PostIt_TextBlock::StaticStruct()))
 		{
-			FK2PostIt_TextBlock& TextBlock = TempBlock.GetMutable<FK2PostIt_TextBlock>();
-
+			FK2PostIt_TextBlock& TextBlock = CurrentBlock.GetMutable<FK2PostIt_TextBlock>();
 			FString& Text = TextBlock.GetText();
+			
+			// Start off with one chunk. Then we'll process it with the rules.
+			// Each rule will process the whole set from start to finish.
+			// Any time any rule finds a match, we'll split that chunk up into start/middle/end and then keep going, starting from the new end.
+			// The middle replaced section will become marked as "parsed" and skipped by future parsers.
 
-			// Only run these on raw text blocks!
-			if (TempBlock.GetScriptStruct() == FK2PostIt_TextBlock::StaticStruct())
+			using ParserFunc = TFunction<FString(FRegexMatcher&)>;
+			
+			struct InlineParser
 			{
+				InlineParser(const FString& InRegex, TArray<UScriptStruct*> InValidBlocks, ParserFunc Parser)
+					: Regex(InRegex)
+					, ValidBlockTypes(InValidBlocks)
+					, Func(Parser)
+				{}
+				FString Regex;
+				TArray<UScriptStruct*> ValidBlockTypes;
+				ParserFunc Func;
+			};
+
+			// Define all of the parsers. Order is important!
+			TArray<InlineParser> Parsers
+			{
+				// TODO can I grab these three headers in one pass?
 				// ### H3
 				{
-					const FRegexPattern Pattern( R"((?m)^### (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
+					R"((?m)^(?<!\\)### (.+)$)",
+					{ FK2PostIt_TextBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
 					{
-						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Header3>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
+						return FString::Printf(L"<K2PostIt.Header3>%s</>", *Matcher.GetCaptureGroup(1));
 					}
-				}
-			
-				// ## H2
-				{
-					const FRegexPattern Pattern( R"((?m)^## (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
-					{
-						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Header2>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
-					}
-				}
-			
-				// # H1
-				{
-					const FRegexPattern Pattern( R"((?m)^# (.+)$)" , ERegexPatternFlags::CaseInsensitive);
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
-					{
-						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Header1>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
-					}
-				}
-
-			}
-
-			// Do not run these within code blocks!
-			if (TempBlock.GetScriptStruct() != FK2PostIt_CodeBlock::StaticStruct())
-			{
-				// https:// Website browser link
-				{
-					const FRegexPattern Pattern(TEXT(R"((?:^|\s)((?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/\S*)?))"));
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
-					{
-						FString URL = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *URL);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-					}
-				}
+				},
 				
-				// [label](url) Website browser link
+				// ### H2
 				{
-					const FRegexPattern Pattern(TEXT(R"(\[(.*?)\]\((.*?)\))"));
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
+					R"((?m)^(?<!\\)## (.+)$)",
+					{ FK2PostIt_TextBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
 					{
-						FString Label = Matcher.GetCaptureGroup(1);
-						FString URL = Matcher.GetCaptureGroup(2);
-						FString Replacement = FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *Label);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
+						return FString::Printf(L"<K2PostIt.Header2>%s</>", *Matcher.GetCaptureGroup(1));
 					}
-				}
+				},
+				
+				// ### H1
+				{
+					R"((?m)^(?<!\\)# (.+)$)",
+					{ FK2PostIt_TextBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						return FString::Printf(L"<K2PostIt.Header1>%s</>", *Matcher.GetCaptureGroup(1));
+					}
+				},
 				
 				// `text` Code
 				{
-					const FRegexPattern Pattern(TEXT(R"(`(.+?)`)"));
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
+					R"((?<!\\)`(.+?)(?<!\\)`)",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Code = Matcher.GetCaptureGroup(1);
+						return FString::Printf(TEXT("<K2PostIt.Code>%s</>"), *Code);
+					}
+				},
+				
+				// [label](url) Website browser link
+				{
+					R"(\[(.*?)\]\((.*?)\))",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Label = Matcher.GetCaptureGroup(1);
+						FString URL = Matcher.GetCaptureGroup(2);
+						return FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *Label);
+					}
+				},
+
+				// https:// Website browser link
+				{
+					R"((?:[a-z]{3,9}:\/\/?[\-;:&=\+\$,\w]+?[a-z0-9\.\-]+|[\/a-z0-9]+\.|[\-;:&=\+\$,\w]+@)[a-z0-9\.\-]+(?:(?:\/[\+~%\/\.\w\-_]*)?\??[\-\+=&;%@\.\w_]*#?[\.\!\/\\\w]*)?)",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString URL = Matcher.GetCaptureGroup(0);
+						return FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *URL);
+					}
+				},
+				
+				// ***text*** Bold Italic
+				{
+					R"((?<!\\)\*(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*(?<!\\)\*)",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
 					{
 						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Code>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
+						return FString::Printf(TEXT("<K2PostIt.BoldItalic>%s</>"), *Inner);
 					}
-				}
+				},
 				
 				// **text** Bold
 				{
-					const FRegexPattern Pattern(TEXT(R"(\*\*(.+?)\*\*)"));
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
+					R"((?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*)",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
 					{
 						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Bold>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
+						return FString::Printf(TEXT("<K2PostIt.Bold>%s</>"), *Inner);
 					}
-				}
+				},
 
+				// *text* Italic
+				{
+					R"((?<!\\)\*(.+?)(?<!\\)\*)",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Inner = Matcher.GetCaptureGroup(1);
+						return FString::Printf(TEXT("<K2PostIt.Italic>%s</>"), *Inner);
+					}
+				},
+				
 				// __text__ Underline
 				{
-					const FRegexPattern Pattern(TEXT(R"(__(.+?)__)"));
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
+					R"((?<!\\)_(?<!\\)_(.+?)(?<!\\)_(?<!\\)_)",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
 					{
 						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Underline>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
+						return FString::Printf(TEXT("<K2PostIt.Underline>%s</>"), *Inner);
+					}
+				},
+			
+			    // \* unescape any remaining escaped characters
+			    {
+			        R"(\\(\*))",
+			        { FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Inner = Matcher.GetCaptureGroup(1);
+						return "*";
+					}
+			    },
+				
+				// \` unescape any remaining escaped characters
+				{
+					R"(\\(\`))",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Inner = Matcher.GetCaptureGroup(1);
+						return "`";
+					}
+				},
+				
+				// \_ unescape any remaining escaped characters
+				{
+					R"(\\(\_))",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Inner = Matcher.GetCaptureGroup(1);
+						return "_";
+					}
+				},
+				
+				// \# unescape any remaining escaped characters
+				{
+					R"(\\(\#))",
+					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
+					[] (FRegexMatcher& Matcher) -> FString
+					{
+						FString Inner = Matcher.GetCaptureGroup(1);
+						return "#";
 					}
 				}
-			
-				// _text_ Italic
+			};
+
+			// This is the starting point for processing inline parsers
+			TArray<MyStringContainer> StringChunks = { MyStringContainer::MakeRaw(Text) };
+
+			for (const InlineParser& Parser : Parsers)
+			{
+				TArray<UScriptStruct*> ValidBlockTypes = Parser.ValidBlockTypes;
+				const UScriptStruct* CurrentBlockType = CurrentBlock.GetScriptStruct();
+
+				// Make sure that the block we're currently processing is valid for this parser - for example, code blocks should not get processed by **bold** 
+				const auto BlockTypeMatch = [CurrentBlockType] (const UScriptStruct* ParentBlockType)
 				{
-					const FRegexPattern Pattern(TEXT(R"(_(.+?)_)"));
-					FRegexMatcher Matcher(Pattern, Text);
-					while (Matcher.FindNext())
+					return CurrentBlockType == ParentBlockType;
+				};
+				
+				if (!ValidBlockTypes.ContainsByPredicate(BlockTypeMatch))
+				{
+					continue;
+				}
+
+				// Start parsing
+				for (int32 j = 0; j < StringChunks.Num(); ++j)
+				{
+					MyStringContainer& Chunk = StringChunks[j];
+
+					// If the chunk we're about to look at was already parsed, don't parse it again. This is a hack to keep this thing a bit simple - SRichTextBlock doesn't support nesting and neither do we.
+					if (Chunk.IsParsed())
 					{
-						FString Inner = Matcher.GetCaptureGroup(1);
-						FString Replacement = FString::Printf(TEXT("<K2PostIt.Italic>%s</>"), *Inner);
-						Text = Text.Replace(*Matcher.GetCaptureGroup(0), *Replacement, ESearchCase::IgnoreCase);
-						Matcher = FRegexMatcher(Pattern, Text);
+						continue;
+					}
+					
+					const FString& ChunkString = Chunk.Get();
+					
+					const FRegexPattern Pattern(Parser.Regex);
+					FRegexMatcher Matcher(Pattern, ChunkString);
+
+					if (Matcher.FindNext())
+					{
+						int32 current_j = j;
+						TArray<MyStringContainer> ReplacementSegments;
+
+						// We have a match - we're going to split this into three chunks (before the match, the match itself, and after the match)
+						if (Matcher.GetMatchBeginning() > 0)
+						{
+							FString Before = ChunkString.Left(Matcher.GetMatchBeginning());
+							ReplacementSegments.Emplace(MyStringContainer::MakeRaw(Before));
+							++j;
+						}
+
+						// This is the actual parser doing its thing
+						ReplacementSegments.Emplace( MyStringContainer::MakeParsed(Parser.Func(Matcher)) );
+
+						// This is the leftover after the match, on the next for-loop we'll be looking at this chunk 
+						if (Matcher.GetMatchEnding() < ChunkString.Len() - 1)
+						{
+							FString After = ChunkString.RightChop(Matcher.GetMatchEnding()); 
+							ReplacementSegments.Emplace(MyStringContainer::MakeRaw(After));
+						}
+
+						// Pull out the single raw string and replace it with the three chunks. Note the middle chunk is "Parsed" and the Before/After chunks remain raw.
+						StringChunks.RemoveAt(current_j, EAllowShrinking::No);
+						StringChunks.Insert(ReplacementSegments, current_j);
 					}
 				}
 			}
+
+			// We're all done processing this block with all parsers. Turn it back into a contiguous string.
+			auto ProcessedChunksToString = [] (const TArray<MyStringContainer>& StringChunks) -> FString
+			{
+				FString String;
+			
+				for (int32 i = 0; i < StringChunks.Num(); ++i)
+				{
+					const MyStringContainer& Container = StringChunks[i];
+					String += Container.Get();
+				}
+
+				return String;
+			};
+			
+			Text = ProcessedChunksToString(StringChunks);
 		}
 	}
 }

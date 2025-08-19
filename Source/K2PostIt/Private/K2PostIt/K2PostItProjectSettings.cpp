@@ -13,7 +13,7 @@ UK2PostItProjectSettings::UK2PostItProjectSettings()
 		{0.36, 0.63, 0.90, Alpha}, // Blue
 		{0.90, 0.33, 0.09, Alpha}, // Orange
 		{0.99, 0.25, 0.20, Alpha}, // Red
-		{1.00, 1.00, 1.00, Alpha}, // White
+		{0.90, 0.90, 0.90, Alpha}, // White
 		{0.30, 0.30, 0.30, Alpha}, // DarkGray
 		{0.01, 0.01, 0.01, Alpha}, // Noir
 	};

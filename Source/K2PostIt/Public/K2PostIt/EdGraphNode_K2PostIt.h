@@ -130,6 +130,27 @@ public:
 
 // ================================================================================================
 
+struct MyStringContainer
+{
+protected:
+	MyStringContainer(FString InString) : String(InString) {}
+	MyStringContainer(FString InString, bool bInParsed) : String(InString), bParsed(bInParsed) {}
+
+public:
+	static MyStringContainer MakeRaw(FString InString) { return MyStringContainer(InString); } 
+	static MyStringContainer MakeParsed(FString InString) { return MyStringContainer(InString, true); }
+	const FString& Get() const { return String; } 
+
+protected:
+	FString String;
+	bool bParsed = false;
+
+public:
+	bool IsParsed() const { return bParsed; }
+};
+
+// ================================================================================================
+
 UCLASS()
 class K2POSTIT_API UEdGraphNode_K2PostIt : public UK2Node
 {
@@ -143,9 +164,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Comment")
 	FLinearColor CommentColor;
 
+	/** Only effective if "disable markdown by default" is ***not*** set in project settings. */
 	UPROPERTY(EditAnywhere, Category = "Comment")
 	bool bDisableMarkdownRendering = false;
 
+	/** Only effective if "disable markdown by default" is set in project settings. */
 	UPROPERTY(EditAnywhere, Category = "Comment")
 	bool bEnableMarkdownRendering = false;
 	
@@ -204,6 +227,7 @@ public:
 	/** Create a visual widget to represent this node in a graph editor or graph panel.  If not implemented, the default node factory will be used. */
 	virtual TSharedPtr<SGraphNode> CreateVisualWidget() override;
 
+	void GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const override;
 	//~ End UEdGraphNode Interface
 
 	/** Return the font size of the comment */
@@ -227,8 +251,10 @@ private:
 
 	using SomeFunc = TFunction<void(FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)>;
 
-	void ProcessTextBlocks(FString RegexPattern, SomeFunc F);
+	using SomeFunc2 = TFunction<void(FRegexMatcher& Matcher, FString& Text)>;
 	
+	void ProcessTextBlocks(FString RegexPattern, SomeFunc F);
+
 	void PeasantTextToRichText(const FText& PeasantText);
 };
 

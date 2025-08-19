@@ -26,6 +26,7 @@
 #include "SCommentBubble.h"
 #include "SGraphNode.h"
 #include "SGraphPanel.h"
+#include "SK2PostItPreviewWindow.h"
 #include "SlotBase.h"
 #include "Styling/AppStyle.h"
 #include "Styling/ISlateStyle.h"
@@ -36,6 +37,7 @@
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItProjectSettings.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "K2PostIt/Globals/K2PostItConstants.h"
 #include "Types/SlateEnums.h"
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
@@ -158,6 +160,7 @@ void SGraphNodeK2PostIt::Tick( const FGeometry& AllottedGeometry, const double I
 			PreviewPanelWindow.Pin()->SetRenderOpacity(PreviewPanelRenderOpacity);
 
 			PreviewPanelBox->SetWidthOverride(MainPanel->GetCachedGeometry().Size.X);
+			PreviewPanelBox->SetMinDesiredHeight(FormattedTextPanel->GetDesiredSize().Y + 16);
 		}
 	}
 }
@@ -181,11 +184,10 @@ FMargin SGraphNodeK2PostIt::Padding_MarkdownPreviewPanel() const
 {
 	float MainPanelWidth = MainPanel->GetCachedGeometry().Size.X;
 
-	const float InnerBorderPadding = 8.f; // TODO move this out into a single spot
-
-	const float Gap = 16.0f;
+	const float InnerBorderPadding = K2PostIt::Constants::PreviewPanelPadding;
+	const float Gap = K2PostIt::Constants::PreviewPanelGapToEditPanel;
 	
-	return FMargin(MainPanelWidth + Gap, 0 - InnerBorderPadding, -MainPanelWidth - Gap - InnerBorderPadding, -9999);
+	return FMargin(MainPanelWidth + Gap, 0, -MainPanelWidth - Gap - InnerBorderPadding, -9999);
 }
 
 void SGraphNodeK2PostIt::RebuildRichText()
@@ -211,8 +213,6 @@ void SGraphNodeK2PostIt::RebuildRichText()
 
 void SGraphNodeK2PostIt::ShowQuickColorPalette()
 {
-	const float Alpha = 0.95;
-	
 	const TArray<FLinearColor>& Colors = UK2PostItProjectSettings::GetQuickColorPaletteColors();
 	
 	TSharedRef<SHorizontalBox> NewPalette = SNew(SHorizontalBox);
@@ -288,11 +288,11 @@ FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
 
 	Node->GetGraph()->SelectNodeSet( {Node} );
 
-	TSharedRef<SWindow> NewPreviewPanelWindow = SNew(SWindow)
+	TSharedRef<SK2PostItPreviewWindow> NewPreviewPanelWindow = SNew(SK2PostItPreviewWindow)
 	.CreateTitleBar(false)
 	.InitialOpacity(0.0)
-	.SizingRule(ESizingRule::UserSized)
-	.LayoutBorder(8.0f)
+	.SizingRule(ESizingRule::Autosized)
+	.LayoutBorder(.0f)
 	[
 		SNew(SBox)
 		.WidthOverride(120.0f)
@@ -336,9 +336,6 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 	UEdGraphNode_K2PostIt* CommentNode = CastChecked<UEdGraphNode_K2PostIt>(GraphNode);
 	bCachedBubbleVisibility = CommentNode->bCommentBubbleVisible_InDetailsPanel;
 
-	// Setup a tag for this node
-	FString TagName;
-
 	// We want the name of the blueprint as our name - we can find the node from the GUID
 	UObject* Package = GraphNode->GetOutermost();
 	UObject* LastOuter = GraphNode->GetOuter();
@@ -346,7 +343,6 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 	{
 		LastOuter = LastOuter->GetOuter();
 	}
-	TagName = FString::Printf(TEXT("GraphNode,%s,%s"), *LastOuter->GetFullName(), *GraphNode->NodeGuid.ToString());
 
 	SetupErrorReporting();
 
@@ -503,7 +499,6 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 									.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
 									.Text(this, &SGraphNodeK2PostIt::GetCommentText)
 									.OnTextChanged(this, &SGraphNodeK2PostIt::OnPostItCommentTextChanged)
-									//.OnTextCommitted(this, &SGraphNodeK2PostIt::OnPostItCommentTextCommitted)
 								]
 							]
 							+ SOverlay::Slot()
