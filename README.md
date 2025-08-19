@@ -6,9 +6,9 @@ This plugin is currently for the Blueprint Graph only. More graph types may be s
 
 ## Demo Video
 
-This two minute video shows the node in action, and also includes some audio from Zombocom halfway through to keep you entertained:
+This one minute video shows the node in action:
 
-https://i.gyazo.com/9f07ab41f66fcd87b5077657dd08a329.mp4
+https://i.gyazo.com/e39356628d82208e359023e28af71e71.mp4
 
 ## Features
 - Hold Shift+C and click to place a new comment node
