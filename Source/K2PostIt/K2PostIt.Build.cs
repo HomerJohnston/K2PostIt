@@ -8,7 +8,7 @@ public class K2PostIt : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		bUseUnity = false;
+		// bUseUnity = false;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
