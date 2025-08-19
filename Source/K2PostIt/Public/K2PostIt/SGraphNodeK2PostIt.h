@@ -88,9 +88,12 @@ protected:
 	 */
 	void HandleSelection(bool bIsSelected, bool bUpdateNodesUnderComment = false) const;
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6
 	/** called when user is moving the comment node */
 	virtual void MoveTo(const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty = true) override;
-
+#else
+	virtual void MoveTo(const FVector2f& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty = true) override;
+#endif
 	//~ Begin SGraphNodeResizable Interface
 	virtual float GetTitleBarHeight() const override;
 	virtual FSlateRect GetHitTestingBorder() const override;

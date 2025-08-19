@@ -683,10 +683,17 @@ void SGraphNodeK2PostIt::GetOverlayBrushes(bool bSelected, const FVector2D Widge
 	return SGraphNode::GetOverlayBrushes(bSelected, WidgetSize, Brushes);
 }
 
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6
 void SGraphNodeK2PostIt::MoveTo( const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
 {
 	SGraphNode::MoveTo(NewPosition, NodeFilter, bMarkDirty);
 }
+#else
+void SGraphNodeK2PostIt::MoveTo( const FVector2f& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
+{
+	SGraphNode::MoveTo(NewPosition, NodeFilter, bMarkDirty);
+}
+#endif
 
 void SGraphNodeK2PostIt::EndUserInteraction() const
 {

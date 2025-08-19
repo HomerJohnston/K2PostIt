@@ -7,7 +7,6 @@
 #include "Containers/UnrealString.h"
 #include "CoreMinimal.h"
 #include "EdGraphNode_Comment.h"
-#include "InstancedStruct.h"
 #include "EdGraph/EdGraphNode.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "HAL/Platform.h"
@@ -19,6 +18,12 @@
 #include "Textures/SlateIcon.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/UObjectGlobals.h"
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
+	#include "InstancedStruct.h"
+#else
+	#include "StructUtils/InstancedStruct.h"
+#endif
 
 #include "EdGraphNode_K2PostIt.generated.h"
 

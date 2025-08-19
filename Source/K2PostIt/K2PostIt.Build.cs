@@ -7,6 +7,8 @@ public class K2PostIt : ModuleRules
 	public K2PostIt(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		bUseUnity = false;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
