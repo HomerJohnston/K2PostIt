@@ -16,8 +16,9 @@ https://github.com/user-attachments/assets/10877b42-adfb-436b-8b38-955170b587fc
 - Realtime markdown preview pane
 - Partial markdown-style support (some complex edge cases will likely not work correctly, this system may improve over time)
 
-## Notes/Known Nuisances
-- When placing a comment, if you don't let go of Shift+C right away, you'll get a bunch of CCCC's in the title.
+## Notes/Known Issues
+- It may be easy to make this plugin work on older UE5 versions (UE5.4 limit is only due to TInstancedStruct usage)
+- When placing a comment, if you don't let go of Shift+C right away, you'll get a bunch of CCC's in the title.
 - This plugin will modify your Saved\Config\EditorPerProjectUserSettings.ini file by adding a hard-coded entry to [BlueprintSpawnNodes]. I would like to improve this at some point (probably by abandoning this system and making Shift+C place a node directly).*
 - Not all markdown is supported.
 - Longer notes can bog down in performance, especially with URLs. The parser should be made to run async.
