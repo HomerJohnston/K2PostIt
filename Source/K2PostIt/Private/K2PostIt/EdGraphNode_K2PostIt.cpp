@@ -201,10 +201,10 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 	
 	int32 EffectiveIndentLevel = FMath::Clamp(IndentLevel / SpacesPerIndent, 0, 2);
 
-	const float TotalIndent = IndentFactor * EffectiveIndentLevel;
+	const float TotalIndent = IndentFactor * EffectiveIndentLevel + K2PostIt::Constants::BulletBaseIndent;
 	
 	return SNew(SBorder)
-	.Padding(TotalIndent, 4, 0, 4)
+	.Padding(TotalIndent, 8, 0, 0)
 	.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.None))
 	.ForegroundColor_Lambda( [this] ()
 	{

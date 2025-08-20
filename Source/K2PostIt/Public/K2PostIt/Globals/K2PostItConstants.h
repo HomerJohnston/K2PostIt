@@ -25,5 +25,6 @@ namespace K2PostIt
 
 		constexpr float BulletIndentFactor = 24.0f;
 		constexpr float BulletSymbolWidth = 24.0f;
+		constexpr float BulletBaseIndent = 8.0f; 
 	}
 }
