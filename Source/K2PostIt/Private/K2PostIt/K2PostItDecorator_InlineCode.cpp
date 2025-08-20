@@ -114,12 +114,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 				.Text(RunInfo.Content)
 				.LineHeightPercentage(1.0f) // TODO this should be a global 
 				.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
-				.AutoWrapText(true)
-				/*
-				SNew(STextBlock)
-				.TextStyle(&TextStyle)
-				.Text(RunInfo.Content)
-				*/
+				.AutoWrapText(false)
 			]
 		]
 	];
