@@ -6,9 +6,9 @@ This plugin is currently for the Blueprint Graph only. More graph types may be s
 
 ## Demo Video
 
-This one minute video shows the node in action:
+This video shows the node in action (it appears to freeze near the end as the amount of text grows - this is just caused by reparsing all the regex on every keystroke; the node does not run the parser async (yet!)):
 
-https://i.gyazo.com/e39356628d82208e359023e28af71e71.mp4
+https://github.com/user-attachments/assets/10877b42-adfb-436b-8b38-955170b587fc
 
 ## Features
 - Hold Shift+C and click to place a new comment node
