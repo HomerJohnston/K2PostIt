@@ -59,6 +59,11 @@ namespace FEdGraphNode_K2PostIt_Utils
 /////////////////////////////////////////////////////
 // UEdGraphNode_K2PostIt
 
+void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNodeK2PostIt> GraphNodeK2PostIt)
+{
+	OwnerWidget = GraphNodeK2PostIt.ToWeakPtr();
+}
+
 TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 {
 	return SNew(SBorder)
@@ -82,7 +87,14 @@ TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 		.Text(FText::FromString(Text))
 		.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
 		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
-		.AutoWrapText(true)
+		.WrapTextAt_Lambda( [this] ()
+		{
+			if (OwnerWidget.IsValid())
+			{
+				return (float)(OwnerWidget.Pin()->GetWrapAt());
+			}
+			return -1.0f;
+		})
 		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
 		+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
 	];
@@ -168,7 +180,14 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 				.Text(FText::FromString(Text))
 				.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
 				.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
-				.AutoWrapText(true)	
+				.WrapTextAt_Lambda( [this] ()
+				{
+					if (OwnerWidget.IsValid())
+					{
+						return (float)(OwnerWidget.Pin()->GetWrapAt());
+					}
+					return -1.0f;
+				})
 			]	
 		]
 	];
@@ -182,10 +201,10 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 	
 	int32 EffectiveIndentLevel = FMath::Clamp(IndentLevel / SpacesPerIndent, 0, 2);
 
-	FString EffectiveText = Bullets[EffectiveIndentLevel] + " " + Text;
+	const float TotalIndent = IndentFactor * EffectiveIndentLevel;
 	
 	return SNew(SBorder)
-	.Padding(IndentFactor * (1 + EffectiveIndentLevel), 0, 0, 0)
+	.Padding(TotalIndent, 4, 0, 4)
 	.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.None))
 	.ForegroundColor_Lambda( [this] ()
 	{
@@ -199,15 +218,41 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 		return Color;
 	})
 	[
-		SNew(SRichTextBlock)
-		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
-		.DecoratorStyleSet( &FK2PostItStyle::Get() )
-		.Text(FText::FromString(EffectiveText))
-		.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
-		.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
-		.AutoWrapText(true)
-		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
-		+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(0, 0, 0, 0)
+		[
+			SNew(SBox)
+			.WidthOverride(K2PostIt::Constants::BulletSymbolWidth)
+			.HAlign(HAlign_Left)
+			[
+				SNew(SRichTextBlock)
+				.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
+				.DecoratorStyleSet( &FK2PostItStyle::Get() )
+				.Text(FText::FromString(Bullets[EffectiveIndentLevel]))
+				.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
+			]
+		]
+		+ SHorizontalBox::Slot()
+		[
+			SNew(SRichTextBlock)
+			.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
+			.DecoratorStyleSet( &FK2PostItStyle::Get() )
+			.Text(FText::FromString(Text))
+			.LineHeightPercentage(K2PostIt::Constants::MarkdownPanelLineHeightSpacing)
+			.WrappingPolicy(ETextWrappingPolicy::DefaultWrapping)
+			.WrapTextAt_Lambda( [this, TotalIndent] ()
+			{
+				if (OwnerWidget.IsValid())
+				{
+					return (float)(OwnerWidget.Pin()->GetWrapAt() - TotalIndent - K2PostIt::Constants::BulletSymbolWidth);
+				}
+				return -1.0f;
+			})
+			+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
+			+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
+		]
 	];
 }
 
@@ -484,11 +529,11 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 	};
 	ProcessTextBlocks(SeparatorBlockRegex, SeparatorBlockParser);
 
-
-	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:\r?\n)?([\s\S]*?)(?:\r?\n)?\1(\r?\n)?)";
+	
+	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:.*)?(\r?\n)?([\s\S]*?)(?:\r?\n)?\1[ \t]*(?:\r?\n)?)";
 	SomeFunc CodeBlockParser = [this] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
-		FString Code = Matcher.GetCaptureGroup(2);
+		FString Code = Matcher.GetCaptureGroup(3);
 		ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_CodeBlock>(this, Code));
 	};
 	ProcessTextBlocks(CodeBlockRegex, CodeBlockParser);
@@ -595,7 +640,7 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 
 				// https:// Website browser link
 				{
-					R"((?:[a-z]{3,9}:\/\/?[\-;:&=\+\$,\w]+?[a-z0-9\.\-]+|[\/a-z0-9]+\.|[\-;:&=\+\$,\w]+@)[a-z0-9\.\-]+(?:(?:\/[\+~%\/\.\w\-_]*)?\??[\-\+=&;%@\.\w_]*#?[\.\!\/\\\w]*)?)",
+					R"((?![^\s]*\.\.)(?:[a-z]{3,9}:\/\/?[\-;:&=\+\$,\w]+?[a-z0-9.-]+|[\/a-z0-9]+\.|[\-;:&=\+\$,\w]+@)[a-z0-9.-]+(?:(?:\/[\+~%\/.\w\-_]*)?\??[\-\+=&;%@.\w_]*#?[.!\/\\\w]*)?)",
 					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
 					[] (FRegexMatcher& Matcher) -> FString
 					{
@@ -725,7 +770,7 @@ void UEdGraphNode_K2PostIt::PeasantTextToRichText(const FText& PeasantText)
 					
 					const FString& ChunkString = Chunk.Get();
 					
-					const FRegexPattern Pattern(Parser.Regex);
+					const FRegexPattern Pattern(Parser.Regex, ERegexPatternFlags::CaseInsensitive);
 					FRegexMatcher Matcher(Pattern, ChunkString);
 
 					if (Matcher.FindNext())

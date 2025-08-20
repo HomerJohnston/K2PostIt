@@ -23,6 +23,7 @@ namespace K2PostIt
 		constexpr float Separator_BottomPadding = 12.0f;
 		constexpr float Separator_SidePadding = 18.0f;
 
-		constexpr float BulletIndentFactor = 16.0f;
+		constexpr float BulletIndentFactor = 24.0f;
+		constexpr float BulletSymbolWidth = 24.0f;
 	}
 }

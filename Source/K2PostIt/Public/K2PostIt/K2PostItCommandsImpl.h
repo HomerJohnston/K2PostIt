@@ -45,12 +45,13 @@ public:
 	static void BuildFindReferencesMenu(FMenuBuilder& MenuBuilder);
 
 	static void Unregister();
-	
+
+	// TODO this is eventually supposed to become a way to press Shift+C to place a node (without clicking)
 	static void OnCreateComment()
 	{
 		//FBlueprintEditorModule& BlueprintEditorModule = FModuleManager::GetModuleChecked<FBlueprintEditorModule>("Kismet");
 
-		UE_LOG(LogTemp, Display, TEXT("On Creat Comment works!"));
+		UE_LOG(LogTemp, Display, TEXT("On Create Comment works!"));
 		/*
 		TSharedPtr<SGraphEditor> GraphEditor = FocusedGraphEdPtr.Pin();
 		if (GraphEditor.IsValid())

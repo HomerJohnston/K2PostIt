@@ -117,11 +117,12 @@ protected:
 
 	static FSlateWidgetRun::FWidgetRunInfo GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style);
 	
-private:
+public:
 	
 	/** Returns the width to wrap the text of the comment at */
 	float GetWrapAt() const;
 
+private:
 	/** The comment bubble widget (used when zoomed out) */
 	TSharedPtr<SCommentBubble> CommentBubble;
 

@@ -7,6 +7,7 @@
 #include "Containers/UnrealString.h"
 #include "CoreMinimal.h"
 #include "EdGraphNode_Comment.h"
+#include "SGraphNodeK2PostIt.h"
 #include "EdGraph/EdGraphNode.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "HAL/Platform.h"
@@ -18,6 +19,7 @@
 #include "Textures/SlateIcon.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/UObjectGlobals.h"
+#include "Templates/SharedPointer.h"
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 	#include "InstancedStruct.h"
@@ -33,6 +35,7 @@ class UEdGraphPin;
 class UObject;
 struct FPropertyChangedEvent;
 struct Rect;
+class SGraphNodeK2PostIt;
 
 typedef TArray<class UObject*> FCommentNodeSet;
 
@@ -50,11 +53,15 @@ public:
 	
 	FK2PostIt_BaseBlock(UEdGraphNode_K2PostIt* InOwnerNode) : Owner(InOwnerNode) {}
 	
-	virtual ~FK2PostIt_BaseBlock() {};
+	virtual ~FK2PostIt_BaseBlock() {}
+	
+	void SetParentWidget(TSharedPtr<SGraphNodeK2PostIt> GraphNodeK2PostIt);
 	
 protected:
 	UPROPERTY()
 	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
+
+	TWeakPtr<SGraphNodeK2PostIt> OwnerWidget;
 
 public:
 	virtual TSharedPtr<SWidget> Draw() const { return nullptr; };
