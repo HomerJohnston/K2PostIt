@@ -63,6 +63,7 @@ public:
 	virtual FSlateColor GetCommentColor() const override { return GetCommentBodyColor(); }
 	//~ End SGraphNode Interface
 
+	void OnParseComplete();
 	void Construct( const FArguments& InArgs, UEdGraphNode_K2PostIt* InNode );
 
 	/** return if the node can be selected, by pointing given location */

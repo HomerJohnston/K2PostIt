@@ -34,6 +34,7 @@
 #include "Templates/Casts.h"
 #include "TutorialMetaData.h"
 #include "K2PostIt/EdGraphNode_K2PostIt.h"
+#include "K2PostIt/K2PostItAsyncParser.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItProjectSettings.h"
 #include "K2PostIt/K2PostItStyle.h"
@@ -77,6 +78,11 @@ namespace SCommentNodeDefs
 }
 
 
+void SGraphNodeK2PostIt::OnParseComplete()
+{
+	RebuildRichText();
+}
+
 void SGraphNodeK2PostIt::Construct(const FArguments& InArgs, UEdGraphNode_K2PostIt* InNode)
 {
 	this->GraphNode = InNode;
@@ -103,6 +109,8 @@ void SGraphNodeK2PostIt::Construct(const FArguments& InArgs, UEdGraphNode_K2Post
 
 	MouseZone = CRWZ_NotInWindow;
 	bUserIsDragging = false;
+
+	InNode->OnParseCompleteEvent.AddSP(this, &SGraphNodeK2PostIt::OnParseComplete);
 }
 
 void SGraphNodeK2PostIt::Tick( const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime )
@@ -383,7 +391,7 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 			.ColorAndOpacity( FLinearColor::White )
 			.BorderBackgroundColor( this, &SGraphNodeK2PostIt::GetCommentBodyColor )
 			.ForegroundColor(K2PostItColor::DarkGray)
-			.Padding(  FMargin(3.0f) )
+			.Padding(4.0f, 4.0f, 4.0f, 8.0f)
 			.AddMetaData<FGraphNodeMetaData>(TagMeta)
 			.ToolTip(nullptr)
 			[
@@ -871,8 +879,6 @@ void SGraphNodeK2PostIt::OnPostItCommentTextCommitted(const FText& Text, ETextCo
 		CommentNode->SetCommentText(Text);
 		CommentNode->Modify();
 	}
-
-	RebuildRichText();
 }
 
 FSlateWidgetRun::FWidgetRunInfo SGraphNodeK2PostIt::GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style)
