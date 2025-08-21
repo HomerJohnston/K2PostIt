@@ -14,6 +14,11 @@ void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNodeK2PostIt> GraphNo
 	OwnerWidget = GraphNodeK2PostIt.ToWeakPtr();
 }
 
+void FK2PostIt_BaseBlock::SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode)
+{
+	Owner = InOwnerNode;
+}
+
 TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 {
 	return SNew(SBorder)

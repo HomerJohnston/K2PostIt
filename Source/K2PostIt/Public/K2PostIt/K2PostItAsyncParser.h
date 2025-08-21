@@ -25,8 +25,8 @@ public:
 	
 	void SetParentWidget(TSharedPtr<SGraphNodeK2PostIt> GraphNodeK2PostIt);
 
-	void SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode) { Owner = InOwnerNode; }
-	
+	void SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode);
+
 protected:
 	UPROPERTY()
 	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
