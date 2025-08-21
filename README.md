@@ -6,8 +6,6 @@ This plugin is currently for the Blueprint Graph only. More graph types may be s
 
 ## Demo Video
 
-This video shows the node in action (it appears to freeze near the end as the amount of text grows - this is just caused by reparsing all the regex on every keystroke; the node does not run the parser async (yet!)):
-
 https://github.com/user-attachments/assets/5fc84412-b88a-4fef-95f2-b23d7bb4b7c4
 
 ## Usage/Features
