@@ -1,10 +1,11 @@
 // Unlicensed. This file is public domain.
 
+#include "K2PostIt/K2PostItStyle.h"
+
 #include "Framework/Application/SlateApplication.h"
 #include "ILiveCodingModule.h"
 #include "Interfaces/IPluginManager.h"
 #include "K2PostIt/K2PostItColor.h"
-#include "K2PostIt/K2PostItStyle.h"
 #include "Modules/ModuleManager.h"
 #include "Styling/AppStyle.h"
 #include "Styling/CoreStyle.h"

@@ -1,7 +1,8 @@
 ﻿// Unlicensed. This file is public domain.
 
-#include "Interfaces/IPluginManager.h"
 #include "K2PostIt/Globals/K2PostItFileUtilities.h"
+
+#include "Interfaces/IPluginManager.h"
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
 

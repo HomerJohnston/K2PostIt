@@ -1,12 +1,13 @@
 ﻿// Unlicensed. This file is public domain.
 
+#include "K2PostIt/Nodes/EdGraphNode_K2PostIt.h"
+
 #include "BlueprintActionDatabaseRegistrar.h"
 #include "BlueprintNodeSpawner.h"
 #include "Framework/Application/SlateApplication.h"
 #include "GraphEditorSettings.h"
 #include "Internationalization/Internationalization.h"
 #include "K2PostIt/K2PostItAsyncParser.h"
-#include "K2PostIt/Nodes/EdGraphNode_K2PostIt.h"
 #include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/Kismet2NameValidators.h"
