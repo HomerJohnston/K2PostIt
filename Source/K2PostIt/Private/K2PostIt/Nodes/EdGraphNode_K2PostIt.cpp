@@ -25,6 +25,8 @@ class UEdGraphPin;
 
 #define LOCTEXT_NAMESPACE "EdGraph"
 
+// ================================================================================================
+
 namespace FEdGraphNode_K2PostIt_Utils
 {
 	template<typename T>
@@ -44,8 +46,7 @@ namespace FEdGraphNode_K2PostIt_Utils
 	}
 };
 
-/////////////////////////////////////////////////////
-// UEdGraphNode_K2PostIt
+// ================================================================================================
 
 UEdGraphNode_K2PostIt::UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -65,6 +66,8 @@ UEdGraphNode_K2PostIt::UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectIni
 	CommentDepth = -1;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UEdGraphNode_K2PostIt::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector) 
 {
 	UEdGraphNode_K2PostIt* This = CastChecked<UEdGraphNode_K2PostIt>(InThis);
@@ -76,6 +79,8 @@ void UEdGraphNode_K2PostIt::AddReferencedObjects(UObject* InThis, FReferenceColl
 	Super::AddReferencedObjects(InThis, Collector);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UEdGraphNode_K2PostIt::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	if (PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UEdGraphNode_K2PostIt, bCommentBubbleVisible_InDetailsPanel))
@@ -86,6 +91,8 @@ void UEdGraphNode_K2PostIt::PostEditChangeProperty(FPropertyChangedEvent& Proper
 	
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 {
@@ -103,6 +110,8 @@ void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 	FSlateApplication::Get().SetAllUserFocus(SNullWidget::NullWidget, EFocusCause::SetDirectly);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FText UEdGraphNode_K2PostIt::GetTooltipText() const
 {
 	if (NodeComment.IsEmpty())
@@ -116,15 +125,21 @@ FText UEdGraphNode_K2PostIt::GetTooltipText() const
 	return CachedTooltip;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FString UEdGraphNode_K2PostIt::GetDocumentationLink() const
 {
 	return TEXT("Shared/GraphNodes/Common");
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FString UEdGraphNode_K2PostIt::GetDocumentationExcerptName() const
 {
 	return TEXT("UEdGraphNode_K2PostIt");
 }
+
+// ------------------------------------------------------------------------------------------------
 
 FSlateIcon UEdGraphNode_K2PostIt::GetIconAndTint(FLinearColor& OutColor) const
 {
@@ -134,10 +149,14 @@ FSlateIcon UEdGraphNode_K2PostIt::GetIconAndTint(FLinearColor& OutColor) const
 	return Icon;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TSharedPtr<SGraphNode> UEdGraphNode_K2PostIt::CreateVisualWidget()
 {
 	return SNew(SGraphNode_K2PostIt, this);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UEdGraphNode_K2PostIt::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const
 {
@@ -174,6 +193,8 @@ void UEdGraphNode_K2PostIt::GetMenuActions(FBlueprintActionDatabaseRegistrar& Ac
 	}
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FText UEdGraphNode_K2PostIt::GetNodeTitle(ENodeTitleType::Type TitleType) const
 {
 	if(TitleType == ENodeTitleType::MenuTitle)
@@ -188,10 +209,14 @@ FText UEdGraphNode_K2PostIt::GetNodeTitle(ENodeTitleType::Type TitleType) const
 	return FText::FromString(NodeComment);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FText UEdGraphNode_K2PostIt::GetPinNameOverride(const UEdGraphPin& Pin) const
 {
 	return GetNodeTitle(ENodeTitleType::ListView);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 FLinearColor UEdGraphNode_K2PostIt::GetNodeCommentColor() const
 {
@@ -200,6 +225,8 @@ FLinearColor UEdGraphNode_K2PostIt::GetNodeCommentColor() const
 		? CommentColor 
 		: FLinearColor::White;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UEdGraphNode_K2PostIt::ResizeNode(const FVector2D& NewSize)
 {
@@ -210,17 +237,23 @@ void UEdGraphNode_K2PostIt::ResizeNode(const FVector2D& NewSize)
 	}
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UEdGraphNode_K2PostIt::OnRenameNode(const FString& NewName)
 {
 	NodeComment = NewName;
 	CachedTooltip.MarkDirty();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TSharedPtr<class INameValidatorInterface> UEdGraphNode_K2PostIt::MakeNameValidator() const
 {
 	// Comments can be duplicated, etc...
 	return MakeShareable(new FDummyNameValidator(EValidatorResult::Ok));
 }
+
+// ------------------------------------------------------------------------------------------------
 
 bool UEdGraphNode_K2PostIt::IsSelectedInEditor() const
 {
@@ -232,10 +265,14 @@ bool UEdGraphNode_K2PostIt::IsSelectedInEditor() const
 	return SelectionState == ESelectionState::Selected;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UEdGraphNode_K2PostIt::PostLoad()
 {
 	Super::PostLoad();
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 {
@@ -255,10 +292,14 @@ void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 	}
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void UEdGraphNode_K2PostIt::SetSelectionState(const ESelectionState InSelectionState)
 {
 	SelectionState = InSelectionState;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_BaseBlock>> NewBlocks)
 {
@@ -284,8 +325,6 @@ void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_Ba
 	}
 }
 
-
-
-/////////////////////////////////////////////////////
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

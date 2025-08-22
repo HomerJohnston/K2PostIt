@@ -3,7 +3,6 @@
 #include "K2PostIt/K2PostItAsyncParser.h"
 
 #include "Async/Async.h"
-#include "Components/HorizontalBox.h"
 #include "Internationalization/Regex.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItDecorator_InlineCode.h"
@@ -16,15 +15,23 @@
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ------------------------------------------------------------------------------------------------
+
 void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNode_K2PostIt> GraphNodeK2PostIt)
 {
 	OwnerWidget = GraphNodeK2PostIt.ToWeakPtr();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void FK2PostIt_BaseBlock::SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode)
 {
 	Owner = InOwnerNode;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 {
@@ -62,6 +69,8 @@ TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 	];
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 {
 	return SNew(SBox)
@@ -85,6 +94,8 @@ TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 		})
 	];
 }
+
+// ------------------------------------------------------------------------------------------------
 
 TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 {
@@ -155,6 +166,8 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 	];
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 {
 	const FString Bullets[3] { TEXT("\u2756"), TEXT("\u25CF"), TEXT("\u25CB")};
@@ -218,10 +231,14 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 	];
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FK2PostItAsyncParser::FK2PostItAsyncParser(const FString& InString)
 {
 	StringToParse = InString;
 }
+
+// ------------------------------------------------------------------------------------------------
 
 void FK2PostItAsyncParser::RunParser()
 {
@@ -250,6 +267,7 @@ void FK2PostItAsyncParser::RunParser()
 	);
 }
 
+// ------------------------------------------------------------------------------------------------
 
 void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks)
 {
@@ -558,6 +576,7 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 	}
 }
 
+// ------------------------------------------------------------------------------------------------
 
 void FK2PostItAsyncParser::ProcessTextBlocks(FString RegexPattern, SomeFunc F, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks)
 {
@@ -614,3 +633,7 @@ void FK2PostItAsyncParser::ProcessTextBlocks(FString RegexPattern, SomeFunc F, T
 		}
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

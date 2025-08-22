@@ -2,6 +2,10 @@
 
 #include "K2PostIt/Globals/K2PostItFunctions.h"
 
+#define LOCTEXT_NAMESPACE "EdGraph"
+
+// ------------------------------------------------------------------------------------------------
+
 namespace K2PostIt
 {
 	void OnBrowserLinkClicked(const FSlateHyperlinkRun::FMetadata& Metadata)
@@ -14,3 +18,7 @@ namespace K2PostIt
 		}
 	}
 }
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

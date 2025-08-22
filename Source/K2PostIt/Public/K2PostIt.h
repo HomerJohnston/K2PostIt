@@ -7,6 +7,10 @@
 
 class FUICommandList;
 
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ================================================================================================
+
 class FK2PostItModule : public IModuleInterface
 {
 public:
@@ -17,3 +21,7 @@ public:
 	
 	TSharedPtr<FUICommandList> PluginCommands;
 };
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

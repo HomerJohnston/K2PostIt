@@ -12,19 +12,28 @@
 #include "Styling/SlateStyleRegistry.h"
 #include "Styling/SlateTypes.h"
 
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
 TArray<TStrongObjectPtr<UTexture2D>> FK2PostItStyle::Textures;
 FDelegateHandle FK2PostItStyle::OnPatchCompleteHandle;
+TSharedPtr<FSlateStyleSet> FK2PostItStyle::StyleInstance = nullptr;
 
 FK2PostItFonts K2PostItFonts;
 FK2PostItBrushes K2PostItBrushes;
 FK2PostItStyles K2PostItStyles;
 
+// ================================================================================================
+
 #define K2POSTIT_QUOTE(X) #X
+
+// ------------------------------------------------------------------------------------------------
 
 /** Makes a simple font definition copying default font */
 #define K2POSTIT_DEFINE_FONT(NAME, STYLE, SIZE)\
 	K2PostItFonts.NAME = DEFAULT_FONT(STYLE, SIZE);\
 	FSlateFontInfo& NAME = K2PostItFonts.NAME
+
+// ------------------------------------------------------------------------------------------------
 
 /** Loads a TTF from disk */
 #define K2POSTIT_LOAD_FONT(NAME, RESOURCE_PATH, SIZE)\
@@ -33,11 +42,15 @@ FK2PostItStyles K2PostItStyles;
 	K2PostItFonts.NAME = FSlateFontInfo(SourceCompositeFont_##NAME, SIZE);\
 	FSlateFontInfo& NAME = K2PostItFonts.NAME
 
+// ------------------------------------------------------------------------------------------------
+
 /** Define a new brush */
 #define K2POSTIT_DEFINE_BRUSH(TYPE, BRUSHNAME, FILENAME, EXTENSION, ...)\
 	K2PostItBrushes.BRUSHNAME = K2POSTIT_QUOTE(BRUSHNAME);\
 	StyleInstance->Set(K2POSTIT_QUOTE(BRUSHNAME), new TYPE(StyleInstance->RootToContentDir(FILENAME, TEXT(EXTENSION)), __VA_ARGS__));\
 	const TYPE& BRUSHNAME = *static_cast<const TYPE*>(StyleInstance->GetBrush(K2POSTIT_QUOTE(BRUSHNAME)))
+
+// ------------------------------------------------------------------------------------------------
 
 /** Define a new style */
 #define K2POSTIT_DEFINE_STYLE(TYPE, STYLENAME, TEMPLATE, MODS)\
@@ -46,13 +59,15 @@ FK2PostItStyles K2PostItStyles;
 	TYPE& STYLENAME = const_cast<TYPE&>(StyleInstance->GetWidgetStyle<TYPE>(K2POSTIT_QUOTE(STYLENAME)));\
 	STYLENAME MODS
 	
+// ------------------------------------------------------------------------------------------------
+
 /** Used to copy an existing UE brush into K2PostIt style for easier use */
 #define K2POSTIT_REDEFINE_UE_BRUSH(TYPE, K2POSTITNAME, UESTYLESET, UENAME, ...)\
 	K2PostItBrushes.K2POSTITNAME = K2POSTIT_QUOTE(K2POSTITNAME);\
 	const TYPE& K2POSTITNAME = *(new TYPE(UESTYLESET::GetBrush(UENAME)->GetResourceName().ToString(), __VA_ARGS__));\
 	StyleInstance->Set(K2POSTIT_QUOTE(K2POSTITNAME), const_cast<TYPE*>(&K2POSTITNAME))
 
-
+// ================================================================================================
 
 #define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( StyleInstance->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
 #define BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( StyleInstance->RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
@@ -72,9 +87,8 @@ FK2PostItStyles K2PostItStyles;
 
 #define DEFAULT_FONT(...) FCoreStyle::GetDefaultFontStyle(__VA_ARGS__)
 
-#define LOCTEXT_NAMESPACE "K2PostItEditor"
+// ================================================================================================
 
-TSharedPtr<FSlateStyleSet> FK2PostItStyle::StyleInstance = nullptr;
 
 ISlateStyle& FK2PostItStyle::Get()
 {

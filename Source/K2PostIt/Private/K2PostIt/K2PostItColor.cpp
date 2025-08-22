@@ -2,18 +2,28 @@
 
 #include "K2PostIt/K2PostItColor.h"
 
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ------------------------------------------------------------------------------------------------
+
 FLinearColor K2PostItColor::Desaturate(FLinearColor InColor, float Desaturation)
 {
 	float Lum = InColor.GetLuminance();
 	return FMath::Lerp(InColor, FLinearColor(Lum, Lum, Lum, InColor.A), Desaturation);
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FLinearColor K2PostItColor::Darken(FLinearColor InColor, float Darken)
 {
-	//return FLinearColor::LerpUsingHSV(InColor, K2PostItColor::Black, Darken);
-	
-	return FLinearColor(Darken * Darken * InColor.R, Darken * Darken * InColor.G, Darken * Darken * InColor.B, InColor.A);
+	return FLinearColor(
+		Darken * Darken * InColor.R,
+		Darken * Darken * InColor.G,
+		Darken * Darken * InColor.B,
+		InColor.A);
 }
+
+// ------------------------------------------------------------------------------------------------
 
 const FLinearColor K2PostItColor::GetNominalFontColor(FLinearColor NodeColor, FLinearColor DarkNodeFontColor, FLinearColor LightNodeFontColor)
 {
@@ -29,3 +39,7 @@ const FLinearColor K2PostItColor::GetNominalFontColor(FLinearColor NodeColor, FL
 
 	return LightNodeFontColor;
 }
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

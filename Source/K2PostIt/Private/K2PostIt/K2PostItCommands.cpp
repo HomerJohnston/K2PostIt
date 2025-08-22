@@ -1,6 +1,6 @@
 ﻿// Unlicensed. This file is public domain.
 
-#include "K2PostIt/K2PostItCommandsImpl.h"
+#include "K2PostIt/K2PostItCommands.h"
 
 #include "Framework/Commands/InputChord.h"
 #include "Framework/Commands/UICommandInfo.h"

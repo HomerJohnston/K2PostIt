@@ -6,9 +6,9 @@
 #include "UObject/StrongObjectPtr.h"
 #include "Delegates/IDelegateInstance.h"
 
-#define LOCTEXT_NAMESPACE "K2PostItEditor"
+#define LOCTEXT_NAMESPACE "K2PostIt"
 
-// ==============================================
+// ================================================================================================
 
 struct FK2PostItBrushes
 {
@@ -37,6 +37,10 @@ struct FK2PostItBrushes
 	FName Overlay_QuickColorPaletteShadow;
 };
 
+extern FK2PostItBrushes K2PostItBrushes;
+
+// ================================================================================================
+
 struct FK2PostItStyles
 {
 	// Existing Unreal Editor styles for style consistency
@@ -55,13 +59,17 @@ struct FK2PostItStyles
 	FName K2PostItCommonHyperlink;
 };
 
+extern FK2PostItStyles K2PostItStyles;
+
+// ================================================================================================
+
 struct FK2PostItFonts
 {
 };
 
 extern FK2PostItFonts K2PostItFonts;
-extern FK2PostItBrushes K2PostItBrushes;
-extern FK2PostItStyles K2PostItStyles;
+
+// ================================================================================================
 
 class FK2PostItStyle
 {
@@ -98,5 +106,7 @@ protected:
 	static TSharedPtr<FSlateStyleSet> StyleInstance;
 
 };
+
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

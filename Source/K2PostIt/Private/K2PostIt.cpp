@@ -3,11 +3,13 @@
 #include "K2PostIt.h"
 
 #include "BlueprintEditorModule.h"
-#include "K2PostIt/K2PostItCommandsImpl.h"
+#include "K2PostIt/K2PostItCommands.h"
 #include "K2PostIt/K2PostItStyle.h"
 #include "Misc/ConfigCacheIni.h"
 
-#define LOCTEXT_NAMESPACE "FK2PostItModule"
+#define LOCTEXT_NAMESPACE "FK2PostIt"
+
+// ------------------------------------------------------------------------------------------------
 
 void FK2PostItModule::StartupModule()
 {
@@ -48,11 +50,15 @@ void FK2PostItModule::StartupModule()
 	}
 }
 
+// ------------------------------------------------------------------------------------------------
+
 void FK2PostItModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 }
+
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE
 	
