@@ -1,9 +1,11 @@
-﻿// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
-// This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
+﻿// Unlicensed. This file is public domain.
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "Containers/UnrealString.h"
+#include "UObject/NameTypes.h"
+
+#define LOCTEXT_NAMESPACE "K2PostIt"
 
 namespace K2PostIt
 {
@@ -16,3 +18,5 @@ namespace K2PostIt
 		K2POSTIT_API FName GetTagConfigFileName();
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

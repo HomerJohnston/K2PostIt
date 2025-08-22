@@ -1,13 +1,17 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Unlicensed. This file is public domain.
 
-#include "K2PostIt/EdGraphNode_K2PostIt.h"
-
+#include "BlueprintActionDatabaseRegistrar.h"
+#include "BlueprintNodeSpawner.h"
+#include "Framework/Application/SlateApplication.h"
 #include "GraphEditorSettings.h"
 #include "Internationalization/Internationalization.h"
-#include "K2PostIt/SGraphNodeK2PostIt.h"
+#include "K2PostIt/K2PostItAsyncParser.h"
+#include "K2PostIt/Nodes/EdGraphNode_K2PostIt.h"
+#include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/Kismet2NameValidators.h"
+#include "Kismet2/KismetEditorUtilities.h"
 #include "Layout/SlateRect.h"
-#include "Math/UnrealMathSSE.h"
 #include "Misc/AssertionMacros.h"
 #include "Styling/AppStyle.h"
 #include "Templates/Casts.h"
@@ -15,22 +19,6 @@
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
 #include "UObject/UnrealType.h"
-
-#include <regex>
-#include <string>
-#include <Widgets/Text/SRichTextBlock.h>
-
-#include "BlueprintActionDatabaseRegistrar.h"
-#include "BlueprintNodeSpawner.h"
-#include "K2PostIt/K2PostItAsyncParser.h"
-#include "K2PostIt/K2PostItColor.h"
-#include "K2PostIt/K2PostItDecorator_InlineCode.h"
-#include "K2PostIt/K2PostItProjectSettings.h"
-#include "K2PostIt/K2PostItStyle.h"
-#include "K2PostIt/Globals/K2PostItConstants.h"
-#include "K2PostIt/Globals/K2PostItFunctions.h"
-#include "Kismet2/BlueprintEditorUtils.h"
-#include "Kismet2/KismetEditorUtilities.h"
 
 class UEdGraphPin;
 
@@ -54,8 +42,6 @@ namespace FEdGraphNode_K2PostIt_Utils
 		}
 	}
 };
-
-
 
 /////////////////////////////////////////////////////
 // UEdGraphNode_K2PostIt
@@ -149,7 +135,7 @@ FSlateIcon UEdGraphNode_K2PostIt::GetIconAndTint(FLinearColor& OutColor) const
 
 TSharedPtr<SGraphNode> UEdGraphNode_K2PostIt::CreateVisualWidget()
 {
-	return SNew(SGraphNodeK2PostIt, this);
+	return SNew(SGraphNode_K2PostIt, this);
 }
 
 void UEdGraphNode_K2PostIt::GetMenuActions(FBlueprintActionDatabaseRegistrar& ActionRegistrar) const

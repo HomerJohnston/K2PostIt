@@ -1,9 +1,16 @@
-﻿#pragma once
+﻿// Unlicensed. This file is public domain.
+
+#pragma once
+
+#include "Runtime/Launch/Resources/Version.h"
+#include "Tasks/Task.h"
 
 // ================================================================================================
 
-class SGraphNodeK2PostIt;
+class SGraphNode_K2PostIt;
 class UEdGraphNode_K2PostIt;
+class SWidget;
+class FRegexMatcher;
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 #include "InstancedStruct.h"
@@ -23,7 +30,7 @@ public:
 	
 	virtual ~FK2PostIt_BaseBlock() {}
 	
-	void SetParentWidget(TSharedPtr<SGraphNodeK2PostIt> GraphNodeK2PostIt);
+	void SetParentWidget(TSharedPtr<SGraphNode_K2PostIt> GraphNodeK2PostIt);
 
 	void SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode);
 
@@ -31,7 +38,7 @@ protected:
 	UPROPERTY()
 	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
 
-	TWeakPtr<SGraphNodeK2PostIt> OwnerWidget;
+	TWeakPtr<SGraphNode_K2PostIt> OwnerWidget;
 
 public:
 	virtual TSharedPtr<SWidget> Draw() const { return nullptr; };

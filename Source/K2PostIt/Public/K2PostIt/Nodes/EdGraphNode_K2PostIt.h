@@ -1,25 +1,22 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Unlicensed. This file is public domain.
 
 #pragma once
 
 #include "Containers/Array.h"
-#include "Containers/EnumAsByte.h"
 #include "Containers/UnrealString.h"
 #include "CoreMinimal.h"
-#include "EdGraphNode_Comment.h"
-#include "SGraphNodeK2PostIt.h"
 #include "EdGraph/EdGraphNode.h"
 #include "EdGraph/EdGraphNodeUtils.h"
 #include "HAL/Platform.h"
-#include "HAL/PlatformCrt.h"
 #include "Internationalization/Text.h"
+#include "K2Node.h"
+#include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 #include "Math/Color.h"
-#include "Math/Vector2D.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "Templates/SharedPointer.h"
 #include "Textures/SlateIcon.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/UObjectGlobals.h"
-#include "Templates/SharedPointer.h"
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 5
 #include "InstancedStruct.h"
@@ -35,7 +32,7 @@ class UEdGraphPin;
 class UObject;
 struct FPropertyChangedEvent;
 struct Rect;
-class SGraphNodeK2PostIt;
+class SGraphNode_K2PostIt;
 struct FK2PostIt_BaseBlock;
 class FK2PostItAsyncParser;
 

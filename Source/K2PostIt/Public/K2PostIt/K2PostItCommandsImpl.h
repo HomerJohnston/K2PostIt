@@ -1,4 +1,4 @@
-﻿
+﻿// Unlicensed. This file is public domain.
 
 #pragma once
 

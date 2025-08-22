@@ -1,13 +1,19 @@
-﻿// Creative commons. Do whatever you want with this file.
+﻿// Unlicensed. This file is public domain.
 
 #include "K2PostIt/K2PostItDecorator_Separator.h"
 
 #include "Fonts/FontMeasure.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Framework/Text/SlateWidgetRun.h"
 #include "Framework/Text/TextDecorators.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SSeparator.h"
 
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ------------------------------------------------------------------------------------------------
 
 FK2PostItDecorator_Separator::FK2PostItDecorator_Separator(FString InName, const FSlateColor& InColor)
 	: TextStyle(FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal))
@@ -16,10 +22,14 @@ FK2PostItDecorator_Separator::FK2PostItDecorator_Separator(FString InName, const
 	Color = InColor;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 bool FK2PostItDecorator_Separator::Supports(const FTextRunParseResults& RunInfo, const FString& Text) const
 {
 	return ( RunInfo.Name == RunName );
 }
+
+// ------------------------------------------------------------------------------------------------
 
 TSharedRef<ISlateRun> FK2PostItDecorator_Separator::Create(const TSharedRef<class FTextLayout>& TextLayout, const FTextRunParseResults& RunParseResult, const FString& OriginalText, const TSharedRef<FString>& ModelText, const ISlateStyle* Style)
 {
@@ -31,9 +41,6 @@ TSharedRef<ISlateRun> FK2PostItDecorator_Separator::Create(const TSharedRef<clas
 	{
 		RunInfo.MetaData.Add(Pair.Key, OriginalText.Mid(Pair.Value.BeginIndex, Pair.Value.EndIndex - Pair.Value.BeginIndex));
 	}
-
-//	const FTextBlockStyle& TextStyle = Owner->GetCurrentDefaultTextStyle();
-
 	
 	TSharedPtr<SWidget> DecoratorWidget = CreateDecoratorWidget(RunInfo, TextStyle);
 	
@@ -60,14 +67,20 @@ TSharedRef<ISlateRun> FK2PostItDecorator_Separator::Create(const TSharedRef<clas
 	return SlateRun.ToSharedRef();
 }
 
+// ------------------------------------------------------------------------------------------------
+
 TSharedPtr<SWidget> FK2PostItDecorator_Separator::CreateDecoratorWidget(const FTextRunInfo& RunInfo, const FTextBlockStyle& DefaultTextStyle) const
 {
 	return SNew(SBox)
 	.HAlign(HAlign_Fill)
-		.Padding(0, 0, 0, 8)
+	.Padding(0, 0, 0, 8)
 	[
 		SNew(SSeparator)
 		.Thickness(2)
 		.ColorAndOpacity(K2PostItColor::LightGray_Glass)
 	];
 }
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

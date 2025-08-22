@@ -6,23 +6,23 @@ public class K2PostIt : ModuleRules
 {
 	public K2PostIt(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.NoPCHs;
 
-		// bUseUnity = false;
+		bUseUnity = true;
+		//bUseUnity = false;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
 			}
 			);
-				
 		
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
 			}
 			);
-			
 		
 		PublicDependencyModuleNames.AddRange(
 			new string[]
@@ -31,48 +31,34 @@ public class K2PostIt : ModuleRules
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
-			
-		
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"CoreUObject",
+				"AssetDefinition",
+				"AssetRegistry",
+				"AssetTools",
+				"BlueprintGraph", 
+				"DetailCustomizations",
+				"DeveloperSettings",
+				"EditorStyle",
+				"EditorSubsystem",
+				"EditorWidgets",
 				"Engine",
+				"GraphEditor",
+				"InputCore",
+				"KismetWidgets", 
+				"LiveCoding",
+				"Projects",
+				"PropertyEditor",
 				"Slate",
 				"SlateCore",
-                
-				"UnrealEd",
-				"PropertyEditor",
-				"AssetTools",
-				"DetailCustomizations",
-                
-				"KismetWidgets", 
-                
-				"EditorStyle",
-				"GraphEditor",
-                
-				"EditorSubsystem",
-				"InputCore",
-                
-				"PropertyEditor",
 				"ToolMenus",
-                
+				"ToolWidgets",
 				"UMG",
 				"UMGEditor",
-                
-				"DeveloperSettings",
-                
-				"BlueprintGraph", "LiveCoding",
-                
-				"EditorWidgets",
-				"ToolWidgets",
-				"KismetWidgets",
-                
-				"Projects",
-                
-				"AssetRegistry",
-				"AssetDefinition", "WebBrowser"
-				// ... add private dependencies that you statically link with here ...	
+				"UnrealEd",
 			}
 			);
 		
@@ -89,7 +75,6 @@ public class K2PostIt : ModuleRules
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
-				// ... add any modules that your module loads dynamically here ...
 			}
 			);
 	}

@@ -1,57 +1,56 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Unlicensed. This file is public domain.
 
-
-#include "K2PostIt/SGraphNodeK2PostIt.h"
+#include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 
 #include "Animation/CurveHandle.h"
 #include "Animation/CurveSequence.h"
-#include "Containers/EnumAsByte.h"
 #include "Delegates/Delegate.h"
+#include "EdGraph/EdGraph.h"
 #include "EdGraph/EdGraphNode.h"
 #include "Fonts/SlateFontInfo.h"
 #include "Framework/Application/SlateApplication.h"
 #include "GenericPlatform/GenericApplication.h"
 #include "GraphEditorSettings.h"
-#include "HAL/PlatformCrt.h"
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
 #include "Internationalization/Text.h"
+#include "K2PostIt/Globals/K2PostItConstants.h"
+#include "K2PostIt/K2PostItAsyncParser.h"
+#include "K2PostIt/K2PostItColor.h"
+#include "K2PostIt/K2PostItProjectSettings.h"
+#include "K2PostIt/K2PostItStyle.h"
+#include "K2PostIt/Nodes/EdGraphNode_K2PostIt.h"
+#include "K2PostIt/Widgets/SWindow_K2PostIt.h"
 #include "Layout/ChildrenBase.h"
 #include "Layout/Geometry.h"
 #include "Layout/Margin.h"
 #include "Math/Color.h"
-#include "Math/UnrealMathSSE.h"
 #include "Misc/Attribute.h"
 #include "Misc/Guid.h"
 #include "SCommentBubble.h"
+#include "ScopedTransaction.h"
 #include "SGraphNode.h"
 #include "SGraphPanel.h"
-#include "SK2PostItPreviewWindow.h"
 #include "SlotBase.h"
 #include "Styling/AppStyle.h"
 #include "Styling/ISlateStyle.h"
 #include "Styling/SlateBrush.h"
 #include "Templates/Casts.h"
 #include "TutorialMetaData.h"
-#include "K2PostIt/EdGraphNode_K2PostIt.h"
-#include "K2PostIt/K2PostItAsyncParser.h"
-#include "K2PostIt/K2PostItColor.h"
-#include "K2PostIt/K2PostItProjectSettings.h"
-#include "K2PostIt/K2PostItStyle.h"
-#include "K2PostIt/Globals/K2PostItConstants.h"
 #include "Types/SlateEnums.h"
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
 #include "UObject/Package.h"
-#include "UObject/UObjectGlobals.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SMultiLineEditableTextBox.h"
 #include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SSeparator.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Notifications/SErrorText.h"
 #include "Widgets/SBoxPanel.h"
-#include "Widgets/Colors/SColorBlock.h"
-#include "Widgets/Input/SMultiLineEditableTextBox.h"
 #include "Widgets/Text/SInlineEditableTextBlock.h"
-
-#include "Widgets/Layout/SWidgetSwitcher.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
 class FDragDropEvent;
@@ -78,12 +77,12 @@ namespace SCommentNodeDefs
 }
 
 
-void SGraphNodeK2PostIt::OnParseComplete()
+void SGraphNode_K2PostIt::OnParseComplete()
 {
 	RebuildRichText();
 }
 
-void SGraphNodeK2PostIt::Construct(const FArguments& InArgs, UEdGraphNode_K2PostIt* InNode)
+void SGraphNode_K2PostIt::Construct(const FArguments& InArgs, UEdGraphNode_K2PostIt* InNode)
 {
 	this->GraphNode = InNode;
 	this->bIsSelected = false;
@@ -110,10 +109,10 @@ void SGraphNodeK2PostIt::Construct(const FArguments& InArgs, UEdGraphNode_K2Post
 	MouseZone = CRWZ_NotInWindow;
 	bUserIsDragging = false;
 
-	InNode->OnParseCompleteEvent.AddSP(this, &SGraphNodeK2PostIt::OnParseComplete);
+	InNode->OnParseCompleteEvent.AddSP(this, &SGraphNode_K2PostIt::OnParseComplete);
 }
 
-void SGraphNodeK2PostIt::Tick( const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime )
+void SGraphNode_K2PostIt::Tick( const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime )
 {
 	SGraphNode::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 
@@ -184,22 +183,22 @@ void SGraphNodeK2PostIt::Tick( const FGeometry& AllottedGeometry, const double I
 	}
 }
 
-FReply SGraphNodeK2PostIt::OnDrop( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent )
+FReply SGraphNode_K2PostIt::OnDrop( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent )
 {
 	return FReply::Unhandled();
 }
 
-void SGraphNodeK2PostIt::OnDragEnter( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent )
+void SGraphNode_K2PostIt::OnDragEnter( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent )
 {
 
 }
 
-float SGraphNodeK2PostIt::GetWrapAt() const
+float SGraphNode_K2PostIt::GetWrapAt() const
 {
 	return (float)(CachedWidth - 32.0f);
 }
 
-FMargin SGraphNodeK2PostIt::Padding_MarkdownPreviewPanel() const
+FMargin SGraphNode_K2PostIt::Padding_MarkdownPreviewPanel() const
 {
 	float MainPanelWidth = MainPanel->GetCachedGeometry().Size.X;
 
@@ -209,7 +208,7 @@ FMargin SGraphNodeK2PostIt::Padding_MarkdownPreviewPanel() const
 	return FMargin(MainPanelWidth + Gap, 0, -MainPanelWidth - Gap - InnerBorderPadding, -9999);
 }
 
-void SGraphNodeK2PostIt::RebuildRichText()
+void SGraphNode_K2PostIt::RebuildRichText()
 {
 	UEdGraphNode_K2PostIt* CommentNode = CastChecked<UEdGraphNode_K2PostIt>(GraphNode);
 	
@@ -232,7 +231,7 @@ void SGraphNodeK2PostIt::RebuildRichText()
 	}
 }
 
-void SGraphNodeK2PostIt::ShowQuickColorPalette()
+void SGraphNode_K2PostIt::ShowQuickColorPalette()
 {
 	const TArray<FLinearColor>& Colors = UK2PostItProjectSettings::GetQuickColorPaletteColors();
 	
@@ -246,7 +245,7 @@ void SGraphNodeK2PostIt::ShowQuickColorPalette()
 			.ButtonStyle(FK2PostItStyle::Get(), K2PostItStyles.ButtonStyle_HoverHintOnly)
 			.ContentPadding(4)
 			.Cursor(EMouseCursor::Default)
-			.OnClicked(this, &SGraphNodeK2PostIt::OnClicked_QuickColorPaletteColor, Color)
+			.OnClicked(this, &SGraphNode_K2PostIt::OnClicked_QuickColorPaletteColor, Color)
 			[
 				SNew(SBox)
 				.WidthOverride(20)
@@ -271,7 +270,7 @@ void SGraphNodeK2PostIt::ShowQuickColorPalette()
 	];
 }
 
-void SGraphNodeK2PostIt::HideQuickColorPalette()
+void SGraphNode_K2PostIt::HideQuickColorPalette()
 {
 	if (QuickColorPalette.IsValid())
 	{
@@ -279,7 +278,7 @@ void SGraphNodeK2PostIt::HideQuickColorPalette()
 	}
 }
 
-FReply SGraphNodeK2PostIt::OnClicked_QuickColorPaletteColor(const FLinearColor NewColor)
+FReply SGraphNode_K2PostIt::OnClicked_QuickColorPaletteColor(const FLinearColor NewColor)
 {
 	UEdGraphNode_K2PostIt* Node = GetNodeObjAsK2PostIt();
 
@@ -295,12 +294,12 @@ FReply SGraphNodeK2PostIt::OnClicked_QuickColorPaletteColor(const FLinearColor N
 	return FReply::Unhandled();
 }
 
-UEdGraphNode_K2PostIt* SGraphNodeK2PostIt::GetNodeObjAsK2PostIt()
+UEdGraphNode_K2PostIt* SGraphNode_K2PostIt::GetNodeObjAsK2PostIt()
 {
 	return Cast<UEdGraphNode_K2PostIt>(GetNodeObj());
 }
 
-FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
+FReply SGraphNode_K2PostIt::OnClicked_EditIcon()
 {
 	bEditButtonClicked = true;
 	bFocusAssigned = false;
@@ -309,7 +308,7 @@ FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
 
 	Node->GetGraph()->SelectNodeSet( {Node} );
 
-	TSharedRef<SK2PostItPreviewWindow> NewPreviewPanelWindow = SNew(SK2PostItPreviewWindow)
+	TSharedRef<SWindow_K2PostIt> NewPreviewPanelWindow = SNew(SWindow_K2PostIt)
 	.CreateTitleBar(false)
 	.InitialOpacity(0.0)
 	.SizingRule(ESizingRule::Autosized)
@@ -321,7 +320,7 @@ FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
 			SNew(SBorder)
 			.BorderImage( FK2PostItStyle::GetImageBrush(K2PostItBrushes.PreviewPaneBorder))
 			.ColorAndOpacity( FLinearColor::White )
-			.BorderBackgroundColor( this, &SGraphNodeK2PostIt::GetMarkdownPreviewPaneColor )
+			.BorderBackgroundColor( this, &SGraphNode_K2PostIt::GetMarkdownPreviewPaneColor )
 			.Padding(8)
 			[
 				FormattedTextPanel.ToSharedRef()
@@ -338,12 +337,12 @@ FReply SGraphNodeK2PostIt::OnClicked_EditIcon()
 	return FReply::Handled();
 }
 
-bool SGraphNodeK2PostIt::IsNameReadOnly() const
+bool SGraphNode_K2PostIt::IsNameReadOnly() const
 {
 	return !IsEditable.Get() || SGraphNode::IsNameReadOnly();
 }
 
-void SGraphNodeK2PostIt::UpdateGraphNode()
+void SGraphNode_K2PostIt::UpdateGraphNode()
 {
 	// No pins in a comment box
 	InputPins.Empty();
@@ -379,7 +378,7 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 
 	SAssignNew(FormattedTextPanel, SVerticalBox);
 
-	TAttribute<FMargin> PaddingAttribute_PreviewPane = TAttribute<FMargin>::CreateRaw(this, &SGraphNodeK2PostIt::Padding_MarkdownPreviewPanel);
+	TAttribute<FMargin> PaddingAttribute_PreviewPane = TAttribute<FMargin>::CreateRaw(this, &SGraphNode_K2PostIt::Padding_MarkdownPreviewPanel);
 
 	this->ContentScale.Bind( this, &SGraphNode::GetContentScale );
 	this->GetOrAddSlot( ENodeZone::Center )
@@ -389,7 +388,7 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 			SAssignNew(MainPanel, SBorder)
 			.BorderImage( FK2PostItStyle::GetImageBrush(K2PostItBrushes.Border_K2PostItNode))
 			.ColorAndOpacity( FLinearColor::White )
-			.BorderBackgroundColor( this, &SGraphNodeK2PostIt::GetCommentBodyColor )
+			.BorderBackgroundColor( this, &SGraphNode_K2PostIt::GetCommentBodyColor )
 			.ForegroundColor(K2PostItColor::DarkGray)
 			.Padding(4.0f, 4.0f, 4.0f, 8.0f)
 			.AddMetaData<FGraphNodeMetaData>(TagMeta)
@@ -431,12 +430,12 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 							.ColorAndOpacity(FSlateColor::UseForeground())
 							.ShadowOffset(0)
 							.ShadowColorAndOpacity(K2PostItColor::Transparent)
-							.Text( this, &SGraphNodeK2PostIt::GetEditableNodeTitleAsText )
-							.OnVerifyTextChanged(this, &SGraphNodeK2PostIt::OnVerifyNameTextChanged)
-							.OnTextCommitted(this, &SGraphNodeK2PostIt::OnNameTextCommited)
-							.IsReadOnly( this, &SGraphNodeK2PostIt::IsNameReadOnly )
-							.IsSelected( this, &SGraphNodeK2PostIt::IsSelectedExclusively )
-							.WrapTextAt( this, &SGraphNodeK2PostIt::GetWrapAt )
+							.Text( this, &SGraphNode_K2PostIt::GetEditableNodeTitleAsText )
+							.OnVerifyTextChanged(this, &SGraphNode_K2PostIt::OnVerifyNameTextChanged)
+							.OnTextCommitted(this, &SGraphNode_K2PostIt::OnNameTextCommited)
+							.IsReadOnly( this, &SGraphNode_K2PostIt::IsNameReadOnly )
+							.IsSelected( this, &SGraphNode_K2PostIt::IsSelectedExclusively )
+							.WrapTextAt( this, &SGraphNode_K2PostIt::GetWrapAt )
 							.MultiLine(true)
 							.ModiferKeyForNewLine(EModifierKey::Shift)	
 						]
@@ -522,9 +521,9 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 									[
 										SAssignNew(CommentTextSource, SMultiLineEditableText)
 										.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
-										.Text(this, &SGraphNodeK2PostIt::GetCommentText)
-										.OnTextChanged(this, &SGraphNodeK2PostIt::OnPostItCommentTextChanged)
-										.WrapTextAt( this, &SGraphNodeK2PostIt::GetWrapAt )
+										.Text(this, &SGraphNode_K2PostIt::GetCommentText)
+										.OnTextChanged(this, &SGraphNode_K2PostIt::OnPostItCommentTextChanged)
+										.WrapTextAt( this, &SGraphNode_K2PostIt::GetWrapAt )
 									]
 								]
 								/*
@@ -555,7 +554,7 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 									SNew(SButton)
 									.ButtonStyle(FK2PostItStyle::Get(), K2PostItStyles.ButtonStyle_EditButton)
 									.ContentPadding(0)
-									.OnClicked(this, &SGraphNodeK2PostIt::OnClicked_EditIcon)
+									.OnClicked(this, &SGraphNode_K2PostIt::OnClicked_EditIcon)
 									.Cursor(EMouseCursor::Default)
 									/*
 									.Visibility_Lambda( [this] () { return IsHovered() ? EVisibility::Visible : EVisibility::Collapsed; } )
@@ -590,9 +589,9 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 	// Create comment bubble
 	CommentBubble = SNew(SCommentBubble)
 	.GraphNode(GraphNode)
-	.Text(this, &SGraphNodeK2PostIt::GetNodeComment)
-	.OnTextCommitted(this, &SGraphNodeK2PostIt::OnNameTextCommited)
-	.ColorAndOpacity(this, &SGraphNodeK2PostIt::GetCommentBubbleColor )
+	.Text(this, &SGraphNode_K2PostIt::GetNodeComment)
+	.OnTextCommitted(this, &SGraphNode_K2PostIt::OnNameTextCommited)
+	.ColorAndOpacity(this, &SGraphNode_K2PostIt::GetCommentBubbleColor )
 	.AllowPinning(true)
 	.EnableTitleBarBubble(false)
 	.EnableBubbleCtrls(false)
@@ -612,7 +611,7 @@ void SGraphNodeK2PostIt::UpdateGraphNode()
 	RebuildRichText();
 }
 
-FVector2D SGraphNodeK2PostIt::ComputeDesiredSize( float ) const
+FVector2D SGraphNode_K2PostIt::ComputeDesiredSize( float ) const
 {
 	//float Height = TitleBar->GetDesiredSize().Y + ErrorReporting->AsWidget()->GetDesiredSize().Y + FormattedTextPanel->GetDesiredSize().Y;
 	float Height = MainPanel->GetDesiredSize().Y;
@@ -620,13 +619,13 @@ FVector2D SGraphNodeK2PostIt::ComputeDesiredSize( float ) const
 	return FVector2D(UserSize.X, Height);
 }
 
-FString SGraphNodeK2PostIt::GetNodeComment() const
+FString SGraphNode_K2PostIt::GetNodeComment() const
 {
 	const FString Title = GetEditableNodeTitle();;
 	return Title;
 }
 
-FReply SGraphNodeK2PostIt::OnMouseButtonDoubleClick( const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent )
+FReply SGraphNode_K2PostIt::OnMouseButtonDoubleClick( const FGeometry& InMyGeometry, const FPointerEvent& InMouseEvent )
 {
 	// If user double-clicked in the title bar area
 	if(FindMouseZone(InMyGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())) == CRWZ_TitleBar && IsEditable.Get())
@@ -649,14 +648,14 @@ FReply SGraphNodeK2PostIt::OnMouseButtonDoubleClick( const FGeometry& InMyGeomet
 	}
 }
 
-FReply SGraphNodeK2PostIt::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+FReply SGraphNode_K2PostIt::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	bMouseClickEditingInterlock = true;
 	
 	return SGraphNodeResizable::OnMouseButtonDown(MyGeometry, MouseEvent);
 }
 
-FReply SGraphNodeK2PostIt::OnMouseButtonUp( const FGeometry& MyGeometry, const FPointerEvent& MouseEvent )
+FReply SGraphNode_K2PostIt::OnMouseButtonUp( const FGeometry& MyGeometry, const FPointerEvent& MouseEvent )
 {
 	bMouseClickEditingInterlock = false;
 	
@@ -679,13 +678,13 @@ FReply SGraphNodeK2PostIt::OnMouseButtonUp( const FGeometry& MyGeometry, const F
 	//return FReply::Unhandled();
 }
 
-int32 SGraphNodeK2PostIt::GetSortDepth() const
+int32 SGraphNode_K2PostIt::GetSortDepth() const
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>( GraphNode );
 	return CommentNode ? CommentNode->CommentDepth : -1;
 }
 
-void SGraphNodeK2PostIt::HandleSelection(bool bSelected, bool bUpdateNodesUnderComment) const
+void SGraphNode_K2PostIt::HandleSelection(bool bSelected, bool bUpdateNodesUnderComment) const
 {
 	const FVector2D NodeSize = GetDesiredSize();
 	// we only want to do this after the comment has a valid desired size
@@ -695,7 +694,7 @@ void SGraphNodeK2PostIt::HandleSelection(bool bSelected, bool bUpdateNodesUnderC
 	}
 }
 
-const FSlateBrush* SGraphNodeK2PostIt::GetShadowBrush(bool bSelected) const
+const FSlateBrush* SGraphNode_K2PostIt::GetShadowBrush(bool bSelected) const
 {
 	HandleSelection(bSelected);
 	
@@ -706,7 +705,7 @@ const FSlateBrush* SGraphNodeK2PostIt::GetShadowBrush(bool bSelected) const
 	//return SGraphNode::GetShadowBrush(bSelected);
 }
 
-void SGraphNodeK2PostIt::GetOverlayBrushes(bool bSelected, const FVector2D WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const
+void SGraphNode_K2PostIt::GetOverlayBrushes(bool bSelected, const FVector2D WidgetSize, TArray<FOverlayBrushInfo>& Brushes) const
 {
 	/*
 	const float Fudge = 3.0f;
@@ -724,18 +723,18 @@ void SGraphNodeK2PostIt::GetOverlayBrushes(bool bSelected, const FVector2D Widge
 }
 
 #if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6
-void SGraphNodeK2PostIt::MoveTo( const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
+void SGraphNode_K2PostIt::MoveTo( const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
 {
 	SGraphNode::MoveTo(NewPosition, NodeFilter, bMarkDirty);
 }
 #else
-void SGraphNodeK2PostIt::MoveTo( const FVector2f& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
+void SGraphNode_K2PostIt::MoveTo( const FVector2f& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
 {
 	SGraphNode::MoveTo(NewPosition, NodeFilter, bMarkDirty);
 }
 #endif
 
-void SGraphNodeK2PostIt::EndUserInteraction() const
+void SGraphNode_K2PostIt::EndUserInteraction() const
 {
 	// Find any parent comments and their list of child nodes
 	const FVector2D NodeSize = GetDesiredSize();
@@ -766,29 +765,29 @@ void SGraphNodeK2PostIt::EndUserInteraction() const
 			if (FSlateRect::DoRectanglesIntersect(CommentRect, NodeGeometryGraphSpace))
 			{
 				// This downcast *should* be valid at this point, since we verified the GraphObject is a comment node
-				TSharedPtr<SGraphNodeK2PostIt> CommentWidget = StaticCastSharedPtr<SGraphNodeK2PostIt>(SomeNodeWidget);
+				TSharedPtr<SGraphNode_K2PostIt> CommentWidget = StaticCastSharedPtr<SGraphNode_K2PostIt>(SomeNodeWidget);
 				CommentWidget->HandleSelection(CommentWidget->bIsSelected, true);
 			}
 		}
 	}	
 }
 
-float SGraphNodeK2PostIt::GetTitleBarHeight() const
+float SGraphNode_K2PostIt::GetTitleBarHeight() const
 {
 	return TitleBar.IsValid() ? TitleBar->GetDesiredSize().Y : 0.0f;
 }
 
-FSlateRect SGraphNodeK2PostIt::GetHitTestingBorder() const
+FSlateRect SGraphNode_K2PostIt::GetHitTestingBorder() const
 {
 	return SCommentNodeDefs::HitResultBorderSize;
 }
 
-FVector2D SGraphNodeK2PostIt::GetNodeMaximumSize() const
+FVector2D SGraphNode_K2PostIt::GetNodeMaximumSize() const
 {
 	return FVector2D( UserSize.X + 100, UserSize.Y + 100 );
 }
 
-FSlateColor SGraphNodeK2PostIt::GetCommentBodyColor() const
+FSlateColor SGraphNode_K2PostIt::GetCommentBodyColor() const
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode);
 
@@ -802,7 +801,7 @@ FSlateColor SGraphNodeK2PostIt::GetCommentBodyColor() const
 	}
 }
 
-FSlateColor SGraphNodeK2PostIt::GetMarkdownPreviewPaneColor() const
+FSlateColor SGraphNode_K2PostIt::GetMarkdownPreviewPaneColor() const
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode);
 
@@ -824,7 +823,7 @@ FSlateColor SGraphNodeK2PostIt::GetMarkdownPreviewPaneColor() const
 	return Color;
 }
 
-FSlateColor SGraphNodeK2PostIt::GetCommentTitleBarColor() const
+FSlateColor SGraphNode_K2PostIt::GetCommentTitleBarColor() const
 {
 	return K2PostItColor::Noir_Glass;
 
@@ -843,7 +842,7 @@ FSlateColor SGraphNodeK2PostIt::GetCommentTitleBarColor() const
 	*/
 }
 
-FSlateColor SGraphNodeK2PostIt::GetCommentBubbleColor() const
+FSlateColor SGraphNode_K2PostIt::GetCommentBubbleColor() const
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode);
 	if (CommentNode)
@@ -859,7 +858,7 @@ FSlateColor SGraphNodeK2PostIt::GetCommentBubbleColor() const
 	}
 }
 
-FText SGraphNodeK2PostIt::GetCommentText() const
+FText SGraphNode_K2PostIt::GetCommentText() const
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode);
 	if (CommentNode)
@@ -870,7 +869,7 @@ FText SGraphNodeK2PostIt::GetCommentText() const
 	return FText::GetEmpty();
 }
 
-void SGraphNodeK2PostIt::OnPostItCommentTextCommitted(const FText& Text, ETextCommit::Type Arg)
+void SGraphNode_K2PostIt::OnPostItCommentTextCommitted(const FText& Text, ETextCommit::Type Arg)
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode);
 	if (CommentNode)
@@ -881,31 +880,31 @@ void SGraphNodeK2PostIt::OnPostItCommentTextCommitted(const FText& Text, ETextCo
 	}
 }
 
-FSlateWidgetRun::FWidgetRunInfo SGraphNodeK2PostIt::GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style)
+FSlateWidgetRun::FWidgetRunInfo SGraphNode_K2PostIt::GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style)
 {
 	return FSlateWidgetRun::FWidgetRunInfo(SNew(STextBlock).Text(INVTEXT("HELLO WORLD")), 5);
 }
 
-bool SGraphNodeK2PostIt::CanBeSelected(const FVector2D& MousePositionInNode) const
+bool SGraphNode_K2PostIt::CanBeSelected(const FVector2D& MousePositionInNode) const
 {
 	const EResizableWindowZone InMouseZone = FindMouseZone(MousePositionInNode);
 	return CRWZ_TitleBar == InMouseZone;
 }
 
-FVector2D SGraphNodeK2PostIt::GetDesiredSizeForMarquee() const
+FVector2D SGraphNode_K2PostIt::GetDesiredSizeForMarquee() const
 {
 	const float TitleBarHeight = TitleBar.IsValid() ? TitleBar->GetDesiredSize().Y : 0.0f;
 	return FVector2D(UserSize.X, TitleBarHeight);
 }
 
-FSlateRect SGraphNodeK2PostIt::GetTitleRect() const
+FSlateRect SGraphNode_K2PostIt::GetTitleRect() const
 {
 	const FVector2D NodePosition = GetPosition();
 	FVector2D NodeSize  = TitleBar.IsValid() ? TitleBar->GetDesiredSize() : GetDesiredSize();
 	return FSlateRect( NodePosition.X, NodePosition.Y, NodePosition.X + NodeSize.X, NodePosition.Y + NodeSize.Y ) + SCommentNodeDefs::TitleBarOffset;
 }
 
-void SGraphNodeK2PostIt::OnPostItCommentTextChanged(const FText& Text)
+void SGraphNode_K2PostIt::OnPostItCommentTextChanged(const FText& Text)
 {
 	UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode);
 	if (CommentNode)
@@ -918,7 +917,7 @@ void SGraphNodeK2PostIt::OnPostItCommentTextChanged(const FText& Text)
 	RebuildRichText();
 }
 
-void SGraphNodeK2PostIt::PopulateMetaTag(FGraphNodeMetaData* TagMeta) const
+void SGraphNode_K2PostIt::PopulateMetaTag(FGraphNodeMetaData* TagMeta) const
 {
 	if (GraphNode != nullptr)
 	{

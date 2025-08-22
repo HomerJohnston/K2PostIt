@@ -1,5 +1,8 @@
-﻿#pragma once
+﻿// Unlicensed. This file is public domain.
 
+#pragma once
+
+#define LOCTEXT_NAMESPACE "K2PostIt"
 
 namespace K2PostIt
 {
@@ -29,3 +32,5 @@ namespace K2PostIt
 		constexpr float BulletBaseIndent = 8.0f; 
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

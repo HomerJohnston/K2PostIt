@@ -1,15 +1,22 @@
-﻿#include "K2PostIt/K2PostItAsyncParser.h"
+﻿// Unlicensed. This file is public domain.
 
+#include "K2PostIt/K2PostItAsyncParser.h"
+
+#include "Async/Async.h"
+#include "Components/HorizontalBox.h"
+#include "Internationalization/Regex.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItDecorator_InlineCode.h"
 #include "K2PostIt/K2PostItStyle.h"
-#include "K2PostIt/SGraphNodeK2PostIt.h"
+#include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 #include "K2PostIt/Globals/K2PostItConstants.h"
 #include "K2PostIt/Globals/K2PostItFunctions.h"
 #include "Tasks/Task.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
-void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNodeK2PostIt> GraphNodeK2PostIt)
+void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNode_K2PostIt> GraphNodeK2PostIt)
 {
 	OwnerWidget = GraphNodeK2PostIt.ToWeakPtr();
 }

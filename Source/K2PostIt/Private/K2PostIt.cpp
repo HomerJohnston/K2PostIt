@@ -1,10 +1,11 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Unlicensed. This file is public domain.
 
 #include "K2PostIt.h"
 
 #include "BlueprintEditorModule.h"
 #include "K2PostIt/K2PostItCommandsImpl.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "Misc/ConfigCacheIni.h"
 
 #define LOCTEXT_NAMESPACE "FK2PostItModule"
 

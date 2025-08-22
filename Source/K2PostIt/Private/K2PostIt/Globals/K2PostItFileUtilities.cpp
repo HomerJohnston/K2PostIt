@@ -1,11 +1,11 @@
-﻿// Copyright Ghost Pepper Games, Inc. All Rights Reserved.
-// This work is MIT-licensed. Feel free to use it however you wish, within the confines of the MIT license. 
-
-#include "K2PostIt/Globals/K2PostItFileUtilities.h"
+﻿// Unlicensed. This file is public domain.
 
 #include "Interfaces/IPluginManager.h"
+#include "K2PostIt/Globals/K2PostItFileUtilities.h"
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ------------------------------------------------------------------------------------------------
 
 FString K2PostIt::FileUtilities::GetPluginFolder()
 {
@@ -19,14 +19,20 @@ FString K2PostIt::FileUtilities::GetPluginFolder()
 	return PluginDir;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FString K2PostIt::FileUtilities::GetResourcesFolder()
 {
 	return GetPluginFolder() / "Resources";
 }
 
+// ------------------------------------------------------------------------------------------------
+
 FName K2PostIt::FileUtilities::GetTagConfigFileName()
 {
 	return FName("K2PostItGameplayTags.ini");
 }
+
+// ------------------------------------------------------------------------------------------------
 
 #undef LOCTEXT_NAMESPACE

@@ -1,4 +1,4 @@
-﻿// Creative commons. Do whatever you want with this file.
+﻿// Unlicensed. This file is public domain.
 
 #pragma once
 

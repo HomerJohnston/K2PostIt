@@ -1,8 +1,9 @@
-// Creative commons. Do whatever you want with this file.
+// Unlicensed. This file is public domain.
 
 #pragma once
 
 #include "Styling/SlateStyle.h"
+#include "UObject/StrongObjectPtr.h"
 #include "Delegates/IDelegateInstance.h"
 
 #define LOCTEXT_NAMESPACE "K2PostItEditor"
@@ -64,18 +65,16 @@ extern FK2PostItStyles K2PostItStyles;
 
 class FK2PostItStyle
 {
-public:
-	static TArray<TStrongObjectPtr<UTexture2D>> Textures;
 	
+public:
+	FK2PostItStyle();
+	
+	virtual ~FK2PostItStyle();
+
+public:
 	static ISlateStyle& Get();
 
-	static const FSlateBrush* GetImageBrush(FName BrushName)
-	{
-		return Get().GetBrush(BrushName);
-	}
-	
-	FK2PostItStyle();
-	virtual ~FK2PostItStyle();
+	static const FSlateBrush* GetImageBrush(FName BrushName);
 
 	static FName GetStyleSetName();
 
@@ -89,15 +88,15 @@ protected:
 	static void Initialize_Internal();
 	
 	static void OnPatchComplete();
+
+	static const ISlateStyle* GetParentStyle();
+	
+	static TArray<TStrongObjectPtr<UTexture2D>> Textures;
+
 	static FDelegateHandle OnPatchCompleteHandle;
 
 	static TSharedPtr<FSlateStyleSet> StyleInstance;
 
-	static const ISlateStyle* GetParentStyle();
-	
-private:
-	// DO NOT USE THIS FOR ANYTHING. It's a dumb macro placeholder.
-	// FSlateImageBrush* TEMP;
 };
 
 #undef LOCTEXT_NAMESPACE

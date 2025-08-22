@@ -1,6 +1,12 @@
-﻿#include "K2PostIt/K2PostItProjectSettings.h"
+﻿// Unlicensed. This file is public domain.
 
-#include "K2PostIt/EdGraphNode_K2PostIt.h"
+#include "K2PostIt/K2PostItProjectSettings.h"
+
+#include "K2PostIt/Nodes/EdGraphNode_K2PostIt.h"
+
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ------------------------------------------------------------------------------------------------
 
 UK2PostItProjectSettings::UK2PostItProjectSettings()
 {
@@ -19,12 +25,20 @@ UK2PostItProjectSettings::UK2PostItProjectSettings()
 	};
 }
 
+// ------------------------------------------------------------------------------------------------
+
 const TArray<FLinearColor>& UK2PostItProjectSettings::GetQuickColorPaletteColors()
 {
 	return Get().QuickColorPalette;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 const UK2PostItProjectSettings& UK2PostItProjectSettings::Get()
 {
 	return *GetDefault<UK2PostItProjectSettings>();
 }
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

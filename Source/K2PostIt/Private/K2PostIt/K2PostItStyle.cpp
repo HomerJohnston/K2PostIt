@@ -1,13 +1,15 @@
-// Creative commons / unlicensed. Do whatever you want with this.
+// Unlicensed. This file is public domain.
 
-#include "K2PostIt/K2PostItStyle.h"
-
+#include "Framework/Application/SlateApplication.h"
 #include "ILiveCodingModule.h"
 #include "Interfaces/IPluginManager.h"
-#include "Styling/SlateStyleRegistry.h"
-//#include "K2PostIt/Globals/K2PostItFileUtilities.h"
-//#include "K2PostItEditor/K2PostItDeveloperSettings.h"
 #include "K2PostIt/K2PostItColor.h"
+#include "K2PostIt/K2PostItStyle.h"
+#include "Modules/ModuleManager.h"
+#include "Styling/AppStyle.h"
+#include "Styling/CoreStyle.h"
+#include "Styling/SlateStyleRegistry.h"
+#include "Styling/SlateTypes.h"
 
 TArray<TStrongObjectPtr<UTexture2D>> FK2PostItStyle::Textures;
 FDelegateHandle FK2PostItStyle::OnPatchCompleteHandle;
@@ -77,6 +79,11 @@ ISlateStyle& FK2PostItStyle::Get()
 {
 	TSharedPtr<FSlateStyleSet> FUFKYOU = StyleInstance;
 	return *StyleInstance;
+}
+
+const FSlateBrush* FK2PostItStyle::GetImageBrush(FName BrushName)
+{
+	return Get().GetBrush(BrushName);
 }
 
 FK2PostItStyle::FK2PostItStyle()

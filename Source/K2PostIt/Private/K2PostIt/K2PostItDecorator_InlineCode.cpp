@@ -1,12 +1,14 @@
-﻿// Creative commons. Do whatever you want with this file.
+﻿// Unlicensed. This file is public domain.
 
 #include "K2PostIt/K2PostItDecorator_InlineCode.h"
 
 #include "Fonts/FontMeasure.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Framework/Text/SlateWidgetRun.h"
-#include "K2PostIt/EdGraphNode_K2PostIt.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "K2PostIt/K2PostItStyle.h"
+#include "K2PostIt/Nodes/EdGraphNode_K2PostIt.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
 FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner)

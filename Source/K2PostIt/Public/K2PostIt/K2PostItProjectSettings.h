@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿// Unlicensed. This file is public domain.
+
+#pragma once
+
+#include "Engine/DeveloperSettings.h"
 
 #include "K2PostItProjectSettings.generated.h"
 
