@@ -6,7 +6,7 @@
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 UBlueprintNodeSpawner* FK2PostItBlueprintNodeSpawnerFactory::MakeK2PostItNodeSpawner()
 {

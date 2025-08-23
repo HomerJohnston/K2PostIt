@@ -109,13 +109,6 @@ FK2PostItStyle::FK2PostItStyle()
 FK2PostItStyle::~FK2PostItStyle()
 {
 	Textures.Empty();
-
-#if WITH_LIVE_CODING
-	if (ILiveCodingModule* LiveCoding = FModuleManager::GetModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
-	{
-		LiveCoding->GetOnPatchCompleteDelegate().Remove(OnPatchCompleteHandle);
-	}
-#endif
 	
 	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
 }
@@ -134,13 +127,9 @@ void FK2PostItStyle::Initialize()
 		FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
 	}
 
-#if WITH_LIVE_CODING
-	if (ILiveCodingModule* LiveCoding = FModuleManager::LoadModulePtr<ILiveCodingModule>(LIVE_CODING_MODULE_NAME))
-	{
-		OnPatchCompleteHandle = LiveCoding->GetOnPatchCompleteDelegate().AddStatic(&FK2PostItStyle::OnPatchComplete);
-	}
-#endif
-	Initialize_Internal();
+	SetupStyles();
+
+	ReloadTextures();
 }
 
 void FK2PostItStyle::ReloadTextures()
@@ -161,22 +150,10 @@ TSharedRef<class FSlateStyleSet> FK2PostItStyle::Create()
 	return Style;
 }
 
-#if WITH_LIVE_CODING
-void FK2PostItStyle::OnPatchComplete()
-{
-//	if (UK2PostItDeveloperSettings::GetCloseAndReopenAssetsOnLiveCoding())
-//	{
-		FSlateStyleRegistry::UnRegisterSlateStyle(*StyleInstance);
-		Initialize_Internal();
-		FSlateStyleRegistry::RegisterSlateStyle(*StyleInstance);
-//	}
-}
-
 const ISlateStyle* FK2PostItStyle::GetParentStyle()
 {
 	return &FAppStyle::Get();
 }
-#endif
 
 #define K2POSTIT_COMMON_BRUSH "Common/ButtonHoverHint"
 #define K2POSTIT_COMMON_MARGIN FMargin(4.0 / 16.0)
@@ -184,12 +161,13 @@ const ISlateStyle* FK2PostItStyle::GetParentStyle()
 #define K2POSTIT_COMMON_CHECKBOXSTYLE FAppStyle::Get().GetWidgetStyle<FCheckBoxStyle>("ToggleButtonCheckBox")
 
 
-void FK2PostItStyle::Initialize_Internal()
+void FK2PostItStyle::SetupStyles()
 {
 	if (!IsRunningCommandlet())
 	{
 		FSlateApplication::Get().GetRenderer()->ReloadTextureResources();
 	}
+	
 	
 	K2POSTIT_REDEFINE_UE_BRUSH(FSlateImageBrush,			None,							FAppStyle,	"NoBorder",					FVector2f(16, 16), K2PostItColor::Transparent);
 	K2POSTIT_REDEFINE_UE_BRUSH(FSlateVectorImageBrush,		Icon_FilledCircle,				FAppStyle,	"Icons.FilledCircle",		FVector2f(16, 16));
@@ -198,11 +176,15 @@ void FK2PostItStyle::Initialize_Internal()
 
 	// ============================================================================================
 	// FONTS
+	// Format: K2POSTIT_DEFINE_FONT(FName DefinitionName, FString StyleName, int Size);
+	// Sample: K2POSTIT_DEFINE_FONT(Font_Basic, "Normal", 10);
 	// ============================================================================================
-//	K2POSTIT_DEFINE_FONT(Font_DialogueText,		"Normal",	10);
+
 
 	// ============================================================================================
 	// BRUSHES
+	// Format: K2POSTIT_DEFINE_BRUSH(TypeName, FNameIcon_AudioTime, "DialogueNodeIcons/AudioTime", ".png", FVector2f(16, 16));
+	// Sample: K2POSTIT_DEFINE_BRUSH(FSlateImageBrush, Icon_AudioTime, "DialogueNodeIcons/AudioTime", ".png", FVector2f(16, 16));
 	// ============================================================================================
 //	K2POSTIT_DEFINE_BRUSH(FSlateImageBrush,			Icon_AudioTime,					"DialogueNodeIcons/AudioTime", ".png",	FVector2f(16, 16));
 	K2POSTIT_DEFINE_BRUSH(FSlateBoxBrush,			Border_K2PostItNode,				"Border_K2PostIt", ".tga", FMargin(4.0/8.0));

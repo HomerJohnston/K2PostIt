@@ -93,7 +93,7 @@ public:
 protected:
 	static TSharedRef< class FSlateStyleSet > Create();
 	
-	static void Initialize_Internal();
+	static void SetupStyles();
 	
 	static void OnPatchComplete();
 

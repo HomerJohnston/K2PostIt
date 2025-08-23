@@ -18,7 +18,7 @@
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNode_K2PostIt> GraphNodeK2PostIt)
 {
@@ -32,7 +32,7 @@ void FK2PostIt_BaseBlock::SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode)
 	Owner = InOwnerNode;
 }
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 {
@@ -70,7 +70,7 @@ TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 	];
 }
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 {
@@ -96,7 +96,7 @@ TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 	];
 }
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 {
@@ -167,7 +167,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 	];
 }
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 {
@@ -232,7 +232,7 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 	];
 }
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 FK2PostItAsyncParser::FK2PostItAsyncParser(const FString& InString)
 {

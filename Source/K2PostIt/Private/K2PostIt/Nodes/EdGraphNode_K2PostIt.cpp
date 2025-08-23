@@ -108,6 +108,8 @@ void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 	CommentColor = GetDefault<UEdGraphNode_K2PostIt>()->CommentColor; // For some reason Unreal keeps making the new instance white. Blah.
 
 	FSlateApplication::Get().SetAllUserFocus(SNullWidget::NullWidget, EFocusCause::SetDirectly);
+
+	
 }
 
 // ------------------------------------------------------------------------------------------------

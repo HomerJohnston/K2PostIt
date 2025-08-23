@@ -11,6 +11,10 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/SRichTextBlock.h"
 
+#define LOCTEXT_NAMESPACE "K2PostIt"
+
+// ================================================================================================
+
 FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner)
 	: TextStyle(FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal))
 {
@@ -18,10 +22,14 @@ FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, UEd
 	Owner = InOwner;
 }
 
+// ------------------------------------------------------------------------------------------------
+
 bool FK2PostItDecorator_InlineCode::Supports(const FTextRunParseResults& RunInfo, const FString& Text) const
 {
 	return ( RunInfo.Name == RunName );
 }
+
+// ------------------------------------------------------------------------------------------------
 
 TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<class FTextLayout>& TextLayout, const FTextRunParseResults& RunParseResult, const FString& OriginalText, const TSharedRef<FString>& ModelText, const ISlateStyle* Style)
 {
@@ -58,6 +66,8 @@ TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<cla
 
 	return SlateRun.ToSharedRef();
 }
+
+// ------------------------------------------------------------------------------------------------
 
 TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const FTextRunInfo& RunInfo, const FTextBlockStyle& DefaultTextStyle) const
 {
@@ -121,3 +131,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 		]
 	];
 }
+
+// ------------------------------------------------------------------------------------------------
+
+#undef LOCTEXT_NAMESPACE

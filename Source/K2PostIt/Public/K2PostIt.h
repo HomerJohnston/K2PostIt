@@ -16,10 +16,8 @@ class FK2PostItModule : public IModuleInterface
 public:
 
 	/** IModuleInterface implementation */
-	virtual void StartupModule() override;
-	virtual void ShutdownModule() override;
-	
-	TSharedPtr<FUICommandList> PluginCommands;
+	void StartupModule() override;
+	void ShutdownModule() override;
 };
 
 // ------------------------------------------------------------------------------------------------

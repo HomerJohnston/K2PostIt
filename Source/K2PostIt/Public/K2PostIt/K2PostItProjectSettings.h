@@ -21,7 +21,7 @@ protected:
 	/** If set, markdown will be normally disabled on all comment nodes, and a bool will be placed on nodes to selectively enable markdown rendering, instead of selectively disabling. */
 	UPROPERTY(Config, EditAnywhere, Category = "K2 PostIt")
 	bool bDisableMarkdownByDefault = false;
-	
+
 public:
 	static const TArray<FLinearColor>& GetQuickColorPaletteColors();
 

@@ -4,7 +4,7 @@
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 FLinearColor K2PostItColor::Desaturate(FLinearColor InColor, float Desaturation)
 {

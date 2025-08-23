@@ -13,7 +13,7 @@
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
 
-// ------------------------------------------------------------------------------------------------
+// ================================================================================================
 
 FK2PostItDecorator_Separator::FK2PostItDecorator_Separator(FString InName, const FSlateColor& InColor)
 	: TextStyle(FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal))

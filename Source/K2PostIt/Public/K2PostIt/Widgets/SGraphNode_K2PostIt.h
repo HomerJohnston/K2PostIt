@@ -79,6 +79,8 @@ public:
 protected:
 	void OnPostItCommentTextChanged(const FText& Text);
 
+	EVisibility Visibility_EditButton() const;
+	EVisibility Visibility_Title() const;
 	//~ Begin SGraphNode Interface
 	void UpdateGraphNode() override;
 	void PopulateMetaTag(class FGraphNodeMetaData* TagMeta) const override;
@@ -134,6 +136,8 @@ private:
 	bool bMouseClickEditingInterlock = false;
 
 	bool bEditButtonClicked = false;
+
+	bool bTitleWidgetPanelFocused = false;
 	
 	bool bFocusAssigned = false;
 
@@ -159,6 +163,8 @@ private:
 
 	TSharedPtr<SOverlay> TitleWidgetPanel;
 	
+	FSlateColor ForegroundColor_TitleBorder() const;
+
 	FMargin Padding_MarkdownPreviewPanel() const;
 
 protected:
@@ -186,7 +192,13 @@ private:
 	
 	FReply OnClicked_QuickColorPaletteColor(const FLinearColor NewColor);
 
+	const UEdGraphNode_K2PostIt* GetNodeObjAsK2PostIt() const;
+	
 	UEdGraphNode_K2PostIt* GetNodeObjAsK2PostIt();
 
 	FReply OnClicked_EditIcon();
+
+	int32 WidgetIndex_CommentTextPane() const;
+
+	void UpdatePreviewPanelOpacity();
 };

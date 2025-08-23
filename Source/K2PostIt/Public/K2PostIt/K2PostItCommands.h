@@ -28,7 +28,7 @@ public:
 	{
 	}
 
-	virtual void RegisterCommands() override;
+	void RegisterCommands() override;
 
 	// Create a comment node
 	TSharedPtr< FUICommandInfo > CreateComment;
@@ -47,27 +47,5 @@ public:
 	static void Unregister();
 
 	// TODO this is eventually supposed to become a way to press Shift+C to place a node (without clicking)
-	static void OnCreateComment()
-	{
-		//FBlueprintEditorModule& BlueprintEditorModule = FModuleManager::GetModuleChecked<FBlueprintEditorModule>("Kismet");
-
-		UE_LOG(LogTemp, Display, TEXT("On Create Comment works!"));
-		/*
-		TSharedPtr<SGraphEditor> GraphEditor = FocusedGraphEdPtr.Pin();
-		if (GraphEditor.IsValid())
-		{
-			if (UEdGraph* Graph = GraphEditor->GetCurrentGraph())
-			{
-				if (const UEdGraphSchema* Schema = Graph->GetSchema())
-				{
-					if (Schema->IsA(UEdGraphSchema_K2::StaticClass()))
-					{
-						FEdGraphSchemaAction_K2AddComment CommentAction;
-						CommentAction.PerformAction(Graph, nullptr, GraphEditor->GetPasteLocation());
-					}
-				}
-			}
-		}
-		*/
-	}
+	static void OnCreateComment();
 };
