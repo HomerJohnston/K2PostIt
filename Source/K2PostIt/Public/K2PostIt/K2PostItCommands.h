@@ -46,6 +46,5 @@ public:
 
 	static void Unregister();
 
-	// TODO this is eventually supposed to become a way to press Shift+C to place a node (without clicking)
 	static void OnCreateComment();
 };

@@ -118,7 +118,7 @@ FText UEdGraphNode_K2PostIt::GetTooltipText() const
 {
 	if (NodeComment.IsEmpty())
 	{
-		return NSLOCTEXT("K2Node", "K2PostItCommentBlock_Tooltip", "Hold Shift+C and click to place");
+		return NSLOCTEXT("K2Node", "K2PostItCommentBlock_Tooltip", "Alt+C to place");
 	}
 	if (CachedTooltip.IsOutOfDate(this))
 	{
