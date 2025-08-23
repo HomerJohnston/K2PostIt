@@ -109,7 +109,7 @@ void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 
 	FSlateApplication::Get().SetAllUserFocus(SNullWidget::NullWidget, EFocusCause::SetDirectly);
 
-	
+	bFirstPlaced = true;
 }
 
 // ------------------------------------------------------------------------------------------------

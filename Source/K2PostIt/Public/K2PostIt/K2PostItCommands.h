@@ -22,7 +22,7 @@ public:
 	FK2PostItCommandsImpl()
 		: TCommands<FK2PostItCommandsImpl>( TEXT("K2PostIt"), NSLOCTEXT("Contexts", "K2PostIt", "K2 PostIt"), NAME_None, FAppStyle::GetAppStyleSetName() )
 	{
-	}	
+	}
 
 	virtual ~FK2PostItCommandsImpl()
 	{

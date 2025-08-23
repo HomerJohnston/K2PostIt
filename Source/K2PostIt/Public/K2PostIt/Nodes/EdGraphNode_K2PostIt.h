@@ -85,6 +85,8 @@ public:
 	UPROPERTY()
 	TArray<TInstancedStruct<FK2PostIt_BaseBlock>> Blocks;
 
+	bool bFirstPlaced = false;
+	
 	TSharedPtr<FK2PostItAsyncParser> ActiveParser;
 	
 	TSharedPtr<FK2PostItAsyncParser> QueuedParser;

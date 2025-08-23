@@ -101,7 +101,7 @@ void FK2PostItCommands::OnCreateComment()
 						const FScopedTransaction Transaction(NSLOCTEXT("Unreal", "AddNode", "Add Node"));
 						Graph->Modify();
 
-						UK2Node* NewNode = NewObject<UK2Node>(Graph, UEdGraphNode_K2PostIt::StaticClass());
+						UEdGraphNode_K2PostIt* NewNode = NewObject<UEdGraphNode_K2PostIt>(Graph, UEdGraphNode_K2PostIt::StaticClass());
 						Graph->AddNode(NewNode, true, true);
 
 						NewNode->NodePosX = Position.X;
@@ -109,6 +109,8 @@ void FK2PostItCommands::OnCreateComment()
 
 						NewNode->AllocateDefaultPins();
 						NewNode->ReconstructNode();
+
+						NewNode->PostPlacedNewNode();
 					}
 
 					break;

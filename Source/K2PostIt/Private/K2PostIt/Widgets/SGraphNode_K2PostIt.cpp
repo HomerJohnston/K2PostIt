@@ -2,6 +2,7 @@
 
 #include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 
+#include "Editor.h"
 #include "Animation/CurveHandle.h"
 #include "Animation/CurveSequence.h"
 #include "Delegates/Delegate.h"
@@ -353,7 +354,6 @@ FReply SGraphNode_K2PostIt::OnClicked_EditIcon()
 	bFocusAssigned = false;
 
 	UEdGraphNode* Node = GetNodeObj();
-
 	Node->GetGraph()->SelectNodeSet( {Node} );
 
 	TSharedRef<SWindow_K2PostIt> NewPreviewPanelWindow = SNew(SWindow_K2PostIt)
@@ -432,6 +432,24 @@ void SGraphNode_K2PostIt::UpdatePreviewPanelOpacity()
 
 		PreviewPanelBox->SetWidthOverride(MainPanel->GetCachedGeometry().Size.X);
 		PreviewPanelBox->SetMinDesiredHeight(FormattedTextPanel->GetDesiredSize().Y + 16);
+	}
+}
+
+void SGraphNode_K2PostIt::OnNameTextCommited(const FText& InText, ETextCommit::Type CommitInfo)
+{
+	OnTextCommitted.ExecuteIfBound(InText, CommitInfo, GraphNode);
+	
+	UpdateErrorInfo();
+	if (ErrorReporting.IsValid())
+	{
+		ErrorReporting->SetError(ErrorMsg);
+	}
+
+	if (GetNodeObjAsK2PostIt()->bFirstPlaced)
+	{
+		GetNodeObjAsK2PostIt()->bFirstPlaced = false;
+
+		GEditor->GetTimerManager()->SetTimerForNextTick( [this] {OnClicked_EditIcon();} );
 	}
 }
 
@@ -589,7 +607,7 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 											return Color;
 										})
 										.VAlign(VAlign_Fill)
-										.Padding(6, 8, 6, 8)
+										.Padding(7, 8, 7, 8)
 										[
 											SAssignNew(CommentTextSource, SMultiLineEditableText)
 											.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)

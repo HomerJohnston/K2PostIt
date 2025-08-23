@@ -201,4 +201,7 @@ private:
 	int32 WidgetIndex_CommentTextPane() const;
 
 	void UpdatePreviewPanelOpacity();
+	
+	/* Called when text is committed on the node */
+	void OnNameTextCommited ( const FText& InText, ETextCommit::Type CommitInfo ) ;
 };
