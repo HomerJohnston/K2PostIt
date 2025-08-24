@@ -80,7 +80,7 @@ protected:
 	void OnPostItCommentTextChanged(const FText& Text);
 
 	EVisibility Visibility_EditButton() const;
-	EVisibility Visibility_Title() const;
+	FSlateColor ColorAndOpacity_TitleText() const;
 	//~ Begin SGraphNode Interface
 	void UpdateGraphNode() override;
 	void PopulateMetaTag(class FGraphNodeMetaData* TagMeta) const override;
@@ -203,5 +203,5 @@ private:
 	void UpdatePreviewPanelOpacity();
 	
 	/* Called when text is committed on the node */
-	void OnNameTextCommited ( const FText& InText, ETextCommit::Type CommitInfo ) ;
+	void K2PostIt_OnNameTextCommited ( const FText& InText, ETextCommit::Type CommitInfo ) ;
 };

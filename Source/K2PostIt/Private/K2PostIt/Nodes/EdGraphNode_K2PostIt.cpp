@@ -8,6 +8,7 @@
 #include "GraphEditorSettings.h"
 #include "Internationalization/Internationalization.h"
 #include "K2PostIt/K2PostItAsyncParser.h"
+#include "K2PostIt/K2PostItProjectSettings.h"
 #include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/Kismet2NameValidators.h"
@@ -101,13 +102,8 @@ void UEdGraphNode_K2PostIt::PostPlacedNewNode()
 
 	// This is done here instead of in the constructor so we can later change the default for newly placed
 	// instances without changing all of the existing ones (due to delta serialization)
-	FEdGraphNode_K2PostIt_Utils::SyncPropertyToValue(this, NodeClass->FindPropertyByName(GET_MEMBER_NAME_CHECKED(UEdGraphNode_K2PostIt, CommentColor)), GraphEditorSettings->DefaultCommentNodeTitleColor);
 	FEdGraphNode_K2PostIt_Utils::SyncPropertyToValue(this, NodeClass->FindPropertyByName(GET_MEMBER_NAME_CHECKED(UEdGraphNode_K2PostIt, bCommentBubbleVisible_InDetailsPanel)), GraphEditorSettings->bShowCommentBubbleWhenZoomedOut);
-
-	NodeComment = NSLOCTEXT("K2Node", "CommentBlock_NewEmptyComment", "Comment").ToString();
-	CommentColor = GetDefault<UEdGraphNode_K2PostIt>()->CommentColor; // For some reason Unreal keeps making the new instance white. Blah.
-
-	FSlateApplication::Get().SetAllUserFocus(SNullWidget::NullWidget, EFocusCause::SetDirectly);
+	FEdGraphNode_K2PostIt_Utils::SyncPropertyToValue(this, NodeClass->FindPropertyByName(GET_MEMBER_NAME_CHECKED(UEdGraphNode_K2PostIt, CommentColor)), UK2PostItProjectSettings::GetDefaultCommentColor());
 
 	bFirstPlaced = true;
 }

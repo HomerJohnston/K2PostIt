@@ -1,4 +1,4 @@
-﻿// Copyright Epic Games, Inc. All Rights Reserved.
+// Unlicensed. This file is public domain.
 
 using UnrealBuildTool;
 

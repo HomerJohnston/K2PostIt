@@ -18,13 +18,23 @@ protected:
 	UPROPERTY(Config, EditAnywhere, Category = "K2 PostIt")
 	TArray<FLinearColor> QuickColorPalette;
 
+	/** Controls the initial color for a comment node. */
+	UPROPERTY(Config, EditAnywhere, Category = "K2 PostIt")
+	FLinearColor DefaultCommentColor;
+
+	/** By default, the default comment color will be added to the quick palette (if it isn't already in it). */
+	UPROPERTY(Config, EditAnywhere, Category = "K2 PostIt")
+	bool bExcludeDefaultFromQuickPalette = false;
+	
 	/** If set, markdown will be normally disabled on all comment nodes, and a bool will be placed on nodes to selectively enable markdown rendering, instead of selectively disabling. */
 	UPROPERTY(Config, EditAnywhere, Category = "K2 PostIt")
 	bool bDisableMarkdownByDefault = false;
 
 public:
-	static const TArray<FLinearColor>& GetQuickColorPaletteColors();
+	static TArray<FLinearColor> GetQuickColorPaletteColors();
 
+	static const FLinearColor& GetDefaultCommentColor();
+	
 	UFUNCTION()
 	static bool GetMarkdownDisabledByDefault() { return Get().bDisableMarkdownByDefault; }
 	

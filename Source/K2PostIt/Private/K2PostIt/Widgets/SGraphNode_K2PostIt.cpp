@@ -38,6 +38,7 @@
 #include "Styling/SlateBrush.h"
 #include "Templates/Casts.h"
 #include "TutorialMetaData.h"
+#include "K2PostIt/Widgets/SK2PostItTItleTextBlock.h"
 #include "Types/SlateEnums.h"
 #include "UObject/NameTypes.h"
 #include "UObject/Object.h"
@@ -435,7 +436,7 @@ void SGraphNode_K2PostIt::UpdatePreviewPanelOpacity()
 	}
 }
 
-void SGraphNode_K2PostIt::OnNameTextCommited(const FText& InText, ETextCommit::Type CommitInfo)
+void SGraphNode_K2PostIt::K2PostIt_OnNameTextCommited(const FText& InText, ETextCommit::Type CommitInfo)
 {
 	OnTextCommitted.ExecuteIfBound(InText, CommitInfo, GraphNode);
 	
@@ -525,7 +526,6 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 					.VAlign(VAlign_Top)
 					[
 						SAssignNew(TitleBar, SBorder)
-						.Visibility(this, &SGraphNode_K2PostIt::Visibility_Title)
 						.BorderImage( FAppStyle::GetBrush("NoBorder") )
 						.BorderBackgroundColor(K2PostItColor::White)
 						.ForegroundColor(this, &SGraphNode_K2PostIt::ForegroundColor_TitleBorder)
@@ -540,14 +540,15 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 								SAssignNew(TitleWidgetPanel, SOverlay)
 								+ SOverlay::Slot()
 								[
-									SAssignNew(InlineEditableText, SInlineEditableTextBlock)
+									SAssignNew(InlineEditableText, SK2PostItTitleTextBlock)
 									.Style( &CommentStyle )
-									.ColorAndOpacity(FSlateColor::UseForeground())
+									.ColorAndOpacity(this, &SGraphNode_K2PostIt::ColorAndOpacity_TitleText)
 									.ShadowOffset(0)
 									.ShadowColorAndOpacity(K2PostItColor::Transparent)
 									.Text( this, &SGraphNode_K2PostIt::GetEditableNodeTitleAsText )
+									.EmptyText(LOCTEXT("K2PostIt_CommentTitleDefaultText", "Comment"))
 									.OnVerifyTextChanged(this, &SGraphNode_K2PostIt::OnVerifyNameTextChanged)
-									.OnTextCommitted(this, &SGraphNode_K2PostIt::OnNameTextCommited)
+									.OnTextCommitted(this, &SGraphNode_K2PostIt::K2PostIt_OnNameTextCommited)
 									.IsReadOnly( this, &SGraphNode_K2PostIt::IsNameReadOnly )
 									.IsSelected( this, &SGraphNode_K2PostIt::IsSelectedExclusively )
 									.WrapTextAt( this, &SGraphNode_K2PostIt::GetWrapAt )
@@ -631,6 +632,7 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 							.Padding(PaddingAttribute_PreviewPane)
 							[
 								SAssignNew(PreviewPanelBox, SBox)
+								.Visibility(EVisibility::SelfHitTestInvisible)
 							]
 						]
 					]
@@ -666,7 +668,7 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 	CommentBubble = SNew(SCommentBubble)
 	.GraphNode(GraphNode)
 	.Text(this, &SGraphNode_K2PostIt::GetNodeComment)
-	.OnTextCommitted(this, &SGraphNode_K2PostIt::OnNameTextCommited)
+	.OnTextCommitted(this, &SGraphNode_K2PostIt::K2PostIt_OnNameTextCommited)
 	.ColorAndOpacity(this, &SGraphNode_K2PostIt::GetCommentBubbleColor )
 	.AllowPinning(true)
 	.EnableTitleBarBubble(false)
@@ -1052,25 +1054,28 @@ EVisibility SGraphNode_K2PostIt::Visibility_EditButton() const
 	return EVisibility::Visible;
 }
 
-EVisibility SGraphNode_K2PostIt::Visibility_Title() const
+FSlateColor SGraphNode_K2PostIt::ColorAndOpacity_TitleText() const
 {
-	if (InlineEditableText->HasAnyUserFocusOrFocusedDescendants())
+	if (GraphNode != nullptr)
 	{
-		return EVisibility::Visible;
+		// Trying to catch a non-reproducible crash in this function
+		check(GraphNode->IsValidLowLevel());
+
+		FText TitleText = GraphNode->GetNodeTitle(ENodeTitleType::EditableTitle);
+
+		// TODO this should compare localized text
+		if (TitleText.IsEmpty())//|| TitleText.ToString() == "Comment")
+		{
+			if (const UEdGraphNode_K2PostIt* Node = GetNodeObjAsK2PostIt())
+			{
+				return K2PostItColor::GetNominalFontColor(Node->CommentColor, K2PostItColor::Gray, K2PostItColor::Gray);				
+			}
+
+			return K2PostItColor::Gray_SemiTrans;
+		}
 	}
 	
-	if (bEditButtonClicked)
-	{
-		return EVisibility::Visible;
-	}
-
-	// TODO make the title bar hideable -- challenges: 1) node isn't selectable without it, 2) this method prevents focusing the title bar so it can't be named right after pressing alt+c
-	if (GetEditableNodeTitle().IsEmpty())
-	{
-		//return EVisibility::Collapsed;
-	}
-
-	return EVisibility::Visible;
+	return FSlateColor::UseForeground();
 }
 
 // ------------------------------------------------------------------------------------------------
