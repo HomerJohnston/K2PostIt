@@ -6,7 +6,7 @@ This plugin is currently for the Blueprint Graph only. More graph types may be s
 
 ## Demo Video
 
-https://github.com/user-attachments/assets/5fc84412-b88a-4fef-95f2-b23d7bb4b7c4
+https://github.com/user-attachments/assets/7e4edf37-3d19-4345-a091-53013b1a03dc
 
 ## Usage/Features
 - Press Alt+C to place a new comment node.
