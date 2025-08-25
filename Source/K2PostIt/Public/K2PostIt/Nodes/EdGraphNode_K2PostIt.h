@@ -26,17 +26,18 @@
 
 #include "EdGraphNode_K2PostIt.generated.h"
 
-class UEdGraphNode_K2PostIt;
+class FK2PostItAsyncParser;
 class INameValidatorInterface;
+class SGraphNode_K2PostIt;
+class UEdGraphNode_K2PostIt;
 class UEdGraphPin;
 class UObject;
+
+struct FK2PostIt_BaseBlock;
 struct FPropertyChangedEvent;
 struct Rect;
-class SGraphNode_K2PostIt;
-struct FK2PostIt_BaseBlock;
-class FK2PostItAsyncParser;
 
-typedef TArray<class UObject*> FCommentNodeSet;
+typedef TArray<UObject*> FCommentNodeSet;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRegexPatternUpdated);
 
@@ -82,25 +83,40 @@ public:
 	UPROPERTY()
 	FText CommentText;
 
+protected:
 	UPROPERTY()
 	TArray<TInstancedStruct<FK2PostIt_BaseBlock>> Blocks;
 
+public:
+	TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& GetBlocks();
+	
+	//static 
+	//TArray<TInstancedStruct<FK2PostIt_BaseBlock>> PreviewBlocks;
+
+protected:
 	bool bFirstPlaced = false;
+
+public:
+	bool ConsumeFirstPlacement();
+
+protected:
+	bool bTransactionRequested = false;
 	
 	TSharedPtr<FK2PostItAsyncParser> ActiveParser;
 	
 	TSharedPtr<FK2PostItAsyncParser> QueuedParser;
 
+public:
 	TMulticastDelegate<void()> OnParseCompleteEvent;
 	
 public:
 
 	//~ Begin UObject Interface
-	static void AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector);
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	virtual bool IsSelectedInEditor() const override;
 
 	void PostLoad() override;
+	void PostEditUndo() override;
 	//~ End UObject Interface
 
 	//~ Begin UEdGraphNode Interface
@@ -134,6 +150,8 @@ public:
 	
 	void SetCommentText(const FText& Text);
 
+	void SetPreviewCommentText(const FText& Text);
+	
 	/** Override the default selection state of this graph node */
 	enum class ESelectionState : uint8 { Inherited, Selected, Deselected };
 	void SetSelectionState(const ESelectionState InSelectionState);
@@ -141,9 +159,6 @@ public:
 	void OnParseComplete(TArray<TInstancedStruct<FK2PostIt_BaseBlock>> NewBlocks);
 	
 private:
-	/** Nodes currently within the region of the comment */
-	TArray<TObjectPtr<class UObject>>	NodesUnderComment;
-
 	/** Constructing FText strings can be costly, so we cache the node's tooltip */
 	FNodeTextCache CachedTooltip;
 

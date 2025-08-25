@@ -6,6 +6,7 @@
 #include "BlueprintNodeSpawner.h"
 #include "Framework/Application/SlateApplication.h"
 #include "GraphEditorSettings.h"
+#include "ScopedTransaction.h"
 #include "Internationalization/Internationalization.h"
 #include "K2PostIt/K2PostItAsyncParser.h"
 #include "K2PostIt/K2PostItProjectSettings.h"
@@ -69,15 +70,20 @@ UEdGraphNode_K2PostIt::UEdGraphNode_K2PostIt(const FObjectInitializer& ObjectIni
 
 // ------------------------------------------------------------------------------------------------
 
-void UEdGraphNode_K2PostIt::AddReferencedObjects(UObject* InThis, FReferenceCollector& Collector) 
+TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& UEdGraphNode_K2PostIt::GetBlocks()
 {
-	UEdGraphNode_K2PostIt* This = CastChecked<UEdGraphNode_K2PostIt>(InThis);
-	for (auto It = This->NodesUnderComment.CreateIterator(); It; ++It)
-	{
-		Collector.AddReferencedObject(*It, This);
-	}
+	return Blocks;
+}
 
-	Super::AddReferencedObjects(InThis, Collector);
+// ------------------------------------------------------------------------------------------------
+
+bool UEdGraphNode_K2PostIt::ConsumeFirstPlacement()
+{
+	bool bTemp = bFirstPlaced;
+	
+	bFirstPlaced = false;
+	
+	return bTemp;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -270,12 +276,40 @@ void UEdGraphNode_K2PostIt::PostLoad()
 	Super::PostLoad();
 }
 
+void UEdGraphNode_K2PostIt::PostEditUndo()
+{
+	Super::PostEditUndo();
+
+	SetPreviewCommentText(CommentText);
+}
+
 // ------------------------------------------------------------------------------------------------
 
 void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 {
-	CommentText = Text;
+	if (!ActiveParser.IsValid())
+	{
+		UE_LOG(LogTemp, VeryVerbose, TEXT("SetCommentText"));
+		
+		FScopedTransaction Transaction(TEXT("K2PostIt"), LOCTEXT("Transaction_ChangeCommentText", "Change Comment Text"), this, true);
+		Modify();
+		
+		CommentText = Text;
+		bTransactionRequested = false;
+	}
+	else
+	{
+		UE_LOG(LogTemp, VeryVerbose, TEXT("AwaitCommentText"));
+		
+		CommentText = Text;
+		bTransactionRequested = true;
+	}
+}
 
+void UEdGraphNode_K2PostIt::SetPreviewCommentText(const FText& Text)
+{
+	UE_LOG(LogTemp, VeryVerbose, TEXT("SetPreviewCommentText"));
+	
 	if (ActiveParser.IsValid())
 	{
 		QueuedParser = MakeShared<FK2PostItAsyncParser>(Text.ToString());
@@ -285,7 +319,6 @@ void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 	{
 		ActiveParser = MakeShared<FK2PostItAsyncParser>(Text.ToString());
 		ActiveParser->OnParseComplete.AddUObject(this, &ThisClass::OnParseComplete);
-		
 		ActiveParser->RunParser();	
 	}
 }
@@ -301,12 +334,21 @@ void UEdGraphNode_K2PostIt::SetSelectionState(const ESelectionState InSelectionS
 
 void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_BaseBlock>> NewBlocks)
 {
+	UE_LOG(LogTemp, VeryVerbose, TEXT("OnParseComplete"));
+	// This is normally updating the preview, but it's possible to commit new comment text while it's running
+	
+	//FScopedTransaction Transaction(TEXT("K2PostIt"), LOCTEXT("Transaction_ChangeCommentText", "Change Comment Text"), this, bTransactionRequested);
+	
 	Blocks = NewBlocks;
+
+	if (bTransactionRequested)
+	{
+	//	Modify();
+	}
 
 	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : Blocks)
 	{
 		FK2PostIt_BaseBlock& BlockInstance = Block.GetMutable<FK2PostIt_BaseBlock>();
-		
 		BlockInstance.SetOwnerNode(this);
 	}
 	
@@ -320,6 +362,10 @@ void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_Ba
 		ActiveParser->RunParser();
 
 		QueuedParser = nullptr;
+	}
+	else
+	{
+		//Modify();
 	}
 }
 

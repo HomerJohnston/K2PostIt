@@ -44,7 +44,7 @@ public:
 	void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 	FReply OnDrop( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent ) override;
 	void OnDragEnter( const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent ) override;
-	//~ End SWidget Interface
+	//~ SWidget Interface
 
 	//~ Begin SNodePanel::SNode Interface
 	const FSlateBrush* GetShadowBrush(bool bSelected) const override;
@@ -53,17 +53,22 @@ public:
 	int32 GetSortDepth() const override;
 	void EndUserInteraction() const override;
 	FString GetNodeComment() const override;
-	//~ End SNodePanel::SNode Interface
+	//~ SNodePanel::SNode Interface
 
 	//~ Begin SPanel Interface
 	FVector2D ComputeDesiredSize(float) const override;
-	//~ End SPanel Interface
+	//~ SPanel Interface
 
 	//~ Begin SGraphNode Interface
 	bool IsNameReadOnly() const override;
 	FSlateColor GetCommentColor() const override { return GetCommentBodyColor(); }
-	//~ End SGraphNode Interface
+	//~ SGraphNode Interface
 
+	//~ Begin SGraphNodeResizable Interface
+	FCursorReply OnCursorQuery( const FGeometry& MyGeometry, const FPointerEvent& CursorEvent ) const override;
+	//~ SGraphNodeResizable Interface
+	
+	
 	void OnParseComplete();
 	void Construct( const FArguments& InArgs, UEdGraphNode_K2PostIt* InNode );
 
@@ -77,7 +82,7 @@ public:
 	FSlateRect GetTitleRect() const override;
 
 protected:
-	void OnPostItCommentTextChanged(const FText& Text);
+	void OnTextChanged_CommentTextSource(const FText& Text);
 
 	EVisibility Visibility_EditButton() const;
 	FSlateColor ColorAndOpacity_TitleText() const;
@@ -116,7 +121,7 @@ protected:
 	/** @return the color to tint the comment bubble */
 	FSlateColor GetCommentBubbleColor() const;
 
-	FText GetCommentText() const;
+	FText Text_CommentTextSource() const;
 
 	void OnPostItCommentTextCommitted(const FText& Text, ETextCommit::Type Arg);
 

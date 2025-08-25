@@ -278,7 +278,7 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 
 	
 	FString SeparatorBlockRegex = R"((?m)(\r?\n)?^---{1,}$(\r?\n)?)";
-	SomeFunc SeparatorBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
+	BlockParserDelegate SeparatorBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_SeparatorBlock>());
 	};
@@ -286,7 +286,7 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 
 	
 	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:.*)?(\r?\n)?([\s\S]*?)(?:\r?\n)?\1[ \t]*(?:\r?\n)?)";
-	SomeFunc CodeBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
+	BlockParserDelegate CodeBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		FString Code = Matcher.GetCaptureGroup(3);
 		ReplacementBlocks.Add(TInstancedStruct<FK2PostIt_BaseBlock>::Make<FK2PostIt_CodeBlock>(Code));
@@ -295,7 +295,7 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 
 
 	FString BulletBlockRegex = R"((?m)(?:\r?\n)?^( {0}| {2}| {4})(-)\s(.*)$(?:\r?\n)?)";
-	SomeFunc BulletBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
+	BlockParserDelegate BulletBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		int32 HyphenCount = Matcher.GetCaptureGroup(1).Len();
 
@@ -579,7 +579,7 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 
 // ------------------------------------------------------------------------------------------------
 
-void FK2PostItAsyncParser::ProcessTextBlocks(FString RegexPattern, SomeFunc F, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks)
+void FK2PostItAsyncParser::ProcessTextBlocks(FString RegexPattern, BlockParserDelegate F, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks)
 {
 	for (int32 i = 0; i < Blocks.Num(); ++i)
 	{

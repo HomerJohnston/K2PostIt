@@ -139,10 +139,8 @@ public:
 
 // ================================================================================================
 
-using SomeFunc = TFunction<void(FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)>;
+using BlockParserDelegate = TFunction<void(FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)>;
 
-using SomeFunc2 = TFunction<void(FRegexMatcher& Matcher, FString& Text)>;
-	
 // ================================================================================================
 
 class FK2PostItAsyncParser : public TSharedFromThis<FK2PostItAsyncParser>
@@ -154,7 +152,7 @@ public:
 	
 	static void PeasantTextToRichText(const FString& PeasantText, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks);
 	
-	static void ProcessTextBlocks(FString RegexPattern, SomeFunc F, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks);
+	static void ProcessTextBlocks(FString RegexPattern, BlockParserDelegate F, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& Blocks);
 
 	using BlockArray = TArray<TInstancedStruct<FK2PostIt_BaseBlock>>;
 

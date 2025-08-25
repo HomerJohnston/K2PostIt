@@ -98,10 +98,12 @@ void FK2PostItCommands::OnCreateComment()
 						
 						FVector2D Position = GraphEditor->GetPasteLocation();
 
-						const FScopedTransaction Transaction(NSLOCTEXT("Unreal", "AddNode", "Add Node"));
+						const FScopedTransaction Transaction(NSLOCTEXT("K2PostIt", "AddNode", "Add Node"));
 						Graph->Modify();
 
-						UEdGraphNode_K2PostIt* NewNode = NewObject<UEdGraphNode_K2PostIt>(Graph, UEdGraphNode_K2PostIt::StaticClass());
+						EObjectFlags Flags = RF_Transactional;
+						
+						UEdGraphNode_K2PostIt* NewNode = NewObject<UEdGraphNode_K2PostIt>(Graph, UEdGraphNode_K2PostIt::StaticClass(), NAME_None, Flags);
 						Graph->AddNode(NewNode, true, true);
 
 						NewNode->NodePosX = Position.X;
