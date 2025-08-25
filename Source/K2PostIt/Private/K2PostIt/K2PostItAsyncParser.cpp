@@ -402,14 +402,6 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 							
 							Label = Label.IsEmpty() ? "(No URL)" : FString::Join( LongLabel, TEXT(" "));
 						}
-
-						for (int i = 0; i < 10000000; i++)
-						{
-							int32 j = i;
-							j += i;
-							if (i < 1)
-							UE_LOG(LogTemp, Display, TEXT("HA HA LOGGING IS SLOW"));
-						}
 						
 						return FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *Label);
 					}
