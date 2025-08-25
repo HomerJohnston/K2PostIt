@@ -212,19 +212,6 @@ void SGraphNode_K2PostIt::Tick( const FGeometry& AllottedGeometry, const double 
 	}
 	else if (bEditButtonClicked && PreviewPanelRenderOpacity <= 1.0)
 	{
-		if (!bFocusAssigned)
-		{
-			FSlateApplication::Get().SetAllUserFocus(CommentTextSource, EFocusCause::SetDirectly);
-
-			FModifierKeysState CtrlKey(0, 0, 1, 0, 0, 0, 0, 0, 0);
-			
-			FKeyEvent EndKey(EKeys::End, CtrlKey, 0, false, 0, 0);
-			FSlateApplication::Get().ProcessKeyDownEvent(EndKey);
-			FSlateApplication::Get().ProcessKeyUpEvent(EndKey);
-
-			bFocusAssigned = true;
-		}
-		
 		PreviewPanelRenderOpacity += 5.0f * InDeltaTime;
 		PreviewPanelRenderOpacity = FMath::Clamp(PreviewPanelRenderOpacity, 0.0f, 1.0f);
 	}
@@ -414,7 +401,7 @@ FReply SGraphNode_K2PostIt::OnClicked_EditIcon()
 			.Padding(8)
 			[
 				FormattedTextPanel.ToSharedRef()
-			]	
+			]
 		]
 	];
 
@@ -424,6 +411,21 @@ FReply SGraphNode_K2PostIt::OnClicked_EditIcon()
 
 	ShowQuickColorPalette();
 
+	// Oh my god is this for real? It takes two whole ass ticks for the graph to realize this thing is selected after you click on it.
+	GEditor->GetTimerManager()->SetTimerForNextTick( [this]
+	{
+		GEditor->GetTimerManager()->SetTimerForNextTick( [this]
+		{
+			FSlateApplication::Get().SetAllUserFocus(CommentTextSource, EFocusCause::SetDirectly);
+			
+			FModifierKeysState CtrlKey(0, 0, 1, 0, 0, 0, 0, 0, 0);
+			
+			FKeyEvent EndKey(EKeys::End, CtrlKey, 0, false, 0, 0);
+			FSlateApplication::Get().ProcessKeyDownEvent(EndKey);
+			FSlateApplication::Get().ProcessKeyUpEvent(EndKey);
+		} );
+	} );
+	
 	return FReply::Handled();
 }
 
@@ -490,9 +492,12 @@ void SGraphNode_K2PostIt::K2PostIt_OnNameTextCommited(const FText& InText, EText
 	}
 
 	// Open up the body text editor
-	if (GetNodeObjAsK2PostIt()->ConsumeFirstPlacement())
+	if (GetNodeObjAsK2PostIt()->ConsumeFirstPlacement() && CommitInfo == ETextCommit::OnEnter)
 	{
-		GEditor->GetTimerManager()->SetTimerForNextTick( [this] {OnClicked_EditIcon();} );
+		//GEditor->GetTimerManager()->SetTimerForNextTick( [this]
+		//{
+			OnClicked_EditIcon();
+		//} );
 	}
 }
 

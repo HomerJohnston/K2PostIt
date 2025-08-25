@@ -285,7 +285,7 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 	ProcessTextBlocks(SeparatorBlockRegex, SeparatorBlockParser, Blocks);
 
 	
-	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:.*)?(\r?\n)?([\s\S]*?)(?:\r?\n)?\1[ \t]*(?:\r?\n)?)";
+	FString CodeBlockRegex = R"((?m)(?<=[^`]|^)((?:\r?\n)?```)(?:.*)?(\r?\n)?([\s\S]*?)(?:(?:\r?\n)?\1[ \t]*(?:\r?\n)?|\Z))";
 	BlockParserDelegate CodeBlockParser = [] (FRegexMatcher& Matcher, TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& ReplacementBlocks)
 	{
 		FString Code = Matcher.GetCaptureGroup(3);
