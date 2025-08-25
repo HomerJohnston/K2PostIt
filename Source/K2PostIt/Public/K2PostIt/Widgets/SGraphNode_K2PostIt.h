@@ -123,7 +123,7 @@ protected:
 
 	FText Text_CommentTextSource() const;
 
-	void OnPostItCommentTextCommitted(const FText& Text, ETextCommit::Type Arg);
+	void OnTextCommitted_CommentTextSource(const FText& Text, ETextCommit::Type Arg);
 
 	static FSlateWidgetRun::FWidgetRunInfo GetWidgetThing(const FTextRunInfo& RunInfo, const ISlateStyle* Style);
 	

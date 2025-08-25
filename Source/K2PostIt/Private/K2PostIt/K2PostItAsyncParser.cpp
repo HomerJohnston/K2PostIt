@@ -388,22 +388,33 @@ void FK2PostItAsyncParser::PeasantTextToRichText(const FString& PeasantText, TAr
 					[] (FRegexMatcher& Matcher) -> FString
 					{
 						FString Label = Matcher.GetCaptureGroup(1);
+						
 						FString URL = Matcher.GetCaptureGroup(2);
+						
+						if (Label.IsEmpty())
+						{
+							Label = URL; 
+						}
+
+						if (URL.IsEmpty())
+						{
+							FString LongLabel[] { Label, TEXT("(No URL)") };
+							
+							Label = Label.IsEmpty() ? "(No URL)" : FString::Join( LongLabel, TEXT(" "));
+						}
+
+						for (int i = 0; i < 10000000; i++)
+						{
+							int32 j = i;
+							j += i;
+							if (i < 1)
+							UE_LOG(LogTemp, Display, TEXT("HA HA LOGGING IS SLOW"));
+						}
+						
 						return FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *Label);
 					}
 				},
 
-				// https:// Website browser link
-				{
-					R"((?![^\s]*\.\.)(?:[a-z]{3,9}:\/\/?[\-;:&=\+\$,\w]+?[a-z0-9.-]+|[\/a-z0-9]+\.|[\-;:&=\+\$,\w]+@)[a-z0-9.-]+(?:(?:\/[\+~%\/.\w\-_]*)?\??[\-\+=&;%@.\w_]*#?[.!\/\\\w]*)?)",
-					{ FK2PostIt_TextBlock::StaticStruct(), FK2PostIt_BulletBlock::StaticStruct() },
-					[] (FRegexMatcher& Matcher) -> FString
-					{
-						FString URL = Matcher.GetCaptureGroup(0);
-						return FString::Printf(TEXT("<a id=\"browser\" href=\"%s\" style=\"K2PostItCommonHyperlink\">%s</>"), *URL, *URL);
-					}
-				},
-				
 				// ***text*** Bold Italic
 				{
 					R"((?<!\\)\*(?<!\\)\*(?<!\\)\*(.+?)(?<!\\)\*(?<!\\)\*(?<!\\)\*)",

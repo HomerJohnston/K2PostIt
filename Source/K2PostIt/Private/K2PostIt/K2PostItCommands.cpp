@@ -95,8 +95,12 @@ void FK2PostItCommands::OnCreateComment()
 					if (Schema && Schema->IsA(UEdGraphSchema_K2::StaticClass()))
 					{
 						UE_LOG(LogTemp, VeryVerbose, TEXT("Found graph, schema: %s"), *Schema->GetName());
-						
+
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION < 6
 						FVector2D Position = GraphEditor->GetPasteLocation();
+#else
+						FVector2D Position = GraphEditor->GetPasteLocation2f();
+#endif
 
 						const FScopedTransaction Transaction(NSLOCTEXT("K2PostIt", "AddNode", "Add Node"));
 						Graph->Modify();

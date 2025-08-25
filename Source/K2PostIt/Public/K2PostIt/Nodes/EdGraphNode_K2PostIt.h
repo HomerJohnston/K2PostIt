@@ -83,13 +83,19 @@ public:
 	UPROPERTY()
 	FText CommentText;
 
+	FText PendingCommentText;
+
 protected:
 	UPROPERTY()
 	TArray<TInstancedStruct<FK2PostIt_BaseBlock>> Blocks;
 
+	TArray<TInstancedStruct<FK2PostIt_BaseBlock>> PreTransactionBlocks;
+
+	bool bPreTransactionBlocksSet = false;
+	
 public:
 	TArray<TInstancedStruct<FK2PostIt_BaseBlock>>& GetBlocks();
-	
+
 	//static 
 	//TArray<TInstancedStruct<FK2PostIt_BaseBlock>> PreviewBlocks;
 
@@ -100,14 +106,14 @@ public:
 	bool ConsumeFirstPlacement();
 
 protected:
-	bool bTransactionRequested = false;
+	bool bSetCommentTextRequestPending = false;
 	
 	TSharedPtr<FK2PostItAsyncParser> ActiveParser;
 	
 	TSharedPtr<FK2PostItAsyncParser> QueuedParser;
 
 public:
-	TMulticastDelegate<void()> OnParseCompleteEvent;
+	TMulticastDelegate<void()> OnBlocksUpdatedEvent;
 	
 public:
 
@@ -147,6 +153,8 @@ public:
 
 	/** Return the font size of the comment */
 	virtual int32 GetFontSize() const { return TitleFontSize; }
+
+	void AbortCommentEdit();
 	
 	void SetCommentText(const FText& Text);
 

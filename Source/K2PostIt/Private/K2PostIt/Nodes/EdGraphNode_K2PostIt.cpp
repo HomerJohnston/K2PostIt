@@ -285,6 +285,18 @@ void UEdGraphNode_K2PostIt::PostEditUndo()
 
 // ------------------------------------------------------------------------------------------------
 
+void UEdGraphNode_K2PostIt::AbortCommentEdit()
+{
+	if (bPreTransactionBlocksSet)
+	{
+		Blocks = PreTransactionBlocks;
+		PreTransactionBlocks.Empty();
+		bPreTransactionBlocksSet = false;
+		
+		OnBlocksUpdatedEvent.Broadcast();
+	}
+}
+
 void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 {
 	if (!ActiveParser.IsValid())
@@ -295,20 +307,30 @@ void UEdGraphNode_K2PostIt::SetCommentText(const FText& Text)
 		Modify();
 		
 		CommentText = Text;
-		bTransactionRequested = false;
+		bSetCommentTextRequestPending = false;
+		PendingCommentText = FText::GetEmpty();
+		bPreTransactionBlocksSet = false;
+		PreTransactionBlocks.Empty();
 	}
 	else
 	{
 		UE_LOG(LogTemp, VeryVerbose, TEXT("AwaitCommentText"));
 		
-		CommentText = Text;
-		bTransactionRequested = true;
+		PendingCommentText = Text;
+		bSetCommentTextRequestPending = true;
 	}
 }
 
 void UEdGraphNode_K2PostIt::SetPreviewCommentText(const FText& Text)
 {
 	UE_LOG(LogTemp, VeryVerbose, TEXT("SetPreviewCommentText"));
+
+	// We're going to stash a copy of the last saved Blocks when we start editing the comment. If the user aborts editing the comment node then we'll switch back to it.
+	if (!bPreTransactionBlocksSet)
+	{
+		PreTransactionBlocks = Blocks;
+		bPreTransactionBlocksSet = true;
+	}
 	
 	if (ActiveParser.IsValid())
 	{
@@ -334,19 +356,37 @@ void UEdGraphNode_K2PostIt::SetSelectionState(const ESelectionState InSelectionS
 
 void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_BaseBlock>> NewBlocks)
 {
-	UE_LOG(LogTemp, VeryVerbose, TEXT("OnParseComplete"));
-	// This is normally updating the preview, but it's possible to commit new comment text while it's running
-	
-	//FScopedTransaction Transaction(TEXT("K2PostIt"), LOCTEXT("Transaction_ChangeCommentText", "Change Comment Text"), this, bTransactionRequested);
-	
-	Blocks = NewBlocks;
+	// This is normally updating the preview, but it's possible to commit new comment text while it's running.
 
-	if (bTransactionRequested)
+	// Not sure if I need this. Just checking for marked as garbage.
+	// Concerned about the possibility of the async parser finishing after a blueprint graph is closed.
+	if (!IsValid(this))
 	{
-	//	Modify();
+		return;
 	}
+	
+	UE_LOG(LogTemp, VeryVerbose, TEXT("OnParseComplete"));
 
-	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : Blocks)
+	// bSetCommentTextRequestPending is set by the SetCommentText function when there is a parser running
+	FScopedTransaction Transaction(TEXT("K2PostIt"), LOCTEXT("Transaction_ChangeCommentText", "Change Comment Text"), this, bSetCommentTextRequestPending);
+	
+	// If we're done trying to parse text changes... do the official transaction
+	if (bSetCommentTextRequestPending && !QueuedParser.IsValid())
+	{
+		Modify();
+		CommentText = PendingCommentText;
+		bSetCommentTextRequestPending = false;
+		PendingCommentText = FText::GetEmpty();
+		Blocks = NewBlocks;
+		bPreTransactionBlocksSet = false;
+		PreTransactionBlocks.Empty();
+	}
+	else // Just update the blocks for preview
+	{
+		Blocks = NewBlocks;
+	}
+	
+	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : PreTransactionBlocks)
 	{
 		FK2PostIt_BaseBlock& BlockInstance = Block.GetMutable<FK2PostIt_BaseBlock>();
 		BlockInstance.SetOwnerNode(this);
@@ -354,7 +394,7 @@ void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_Ba
 	
 	ActiveParser = nullptr;
 
-	OnParseCompleteEvent.Broadcast();
+	OnBlocksUpdatedEvent.Broadcast();
 
 	if (QueuedParser.IsValid())
 	{
@@ -362,10 +402,6 @@ void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_Ba
 		ActiveParser->RunParser();
 
 		QueuedParser = nullptr;
-	}
-	else
-	{
-		//Modify();
 	}
 }
 

@@ -1,4 +1,4 @@
-﻿// Unlicensed. This file is public domain.
+// Unlicensed. This file is public domain.
 
 #include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
 
@@ -154,7 +154,7 @@ void SGraphNode_K2PostIt::Construct(const FArguments& InArgs, UEdGraphNode_K2Pos
 	MouseZone = CRWZ_NotInWindow;
 	bUserIsDragging = false;
 
-	InNode->OnParseCompleteEvent.AddSP(this, &SGraphNode_K2PostIt::OnParseComplete);
+	InNode->OnBlocksUpdatedEvent.AddSP(this, &SGraphNode_K2PostIt::OnParseComplete);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -656,7 +656,8 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 											.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
 											.Text(this, &SGraphNode_K2PostIt::Text_CommentTextSource)
 											.OnTextChanged(this, &SGraphNode_K2PostIt::OnTextChanged_CommentTextSource)
-											.OnTextCommitted(this, &SGraphNode_K2PostIt::OnPostItCommentTextCommitted)
+											.OnTextCommitted(this, &SGraphNode_K2PostIt::OnTextCommitted_CommentTextSource)
+											.RevertTextOnEscape(true)
 											.WrapTextAt( this, &SGraphNode_K2PostIt::GetWrapAt )
 										]
 									]
@@ -1031,12 +1032,20 @@ void SGraphNode_K2PostIt::OnTextChanged_CommentTextSource(const FText& Text)
 	}
 }
 
-void SGraphNode_K2PostIt::OnPostItCommentTextCommitted(const FText& Text, ETextCommit::Type Arg)
+void SGraphNode_K2PostIt::OnTextCommitted_CommentTextSource(const FText& Text, ETextCommit::Type Arg)
 {
 	if (UEdGraphNode_K2PostIt* CommentNode = Cast<UEdGraphNode_K2PostIt>(GraphNode))
 	{
-		CommentNode->SetCommentText(Text);
+		if (Arg == ETextCommit::OnCleared)
+		{
+			CommentNode->AbortCommentEdit();
+		}
+		else
+		{
+			CommentNode->SetCommentText(Text);
+		}
 	}
+	
 }
 
 // ------------------------------------------------------------------------------------------------
