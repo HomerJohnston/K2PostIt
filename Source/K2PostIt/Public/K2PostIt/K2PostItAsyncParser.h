@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Runtime/Launch/Resources/Version.h"
+#include "Styling/SlateColor.h"
 #include "Tasks/Task.h"
 
 // ================================================================================================
@@ -32,14 +33,11 @@ public:
 	
 	void SetParentWidget(TSharedPtr<SGraphNode_K2PostIt> GraphNodeK2PostIt);
 
-	void SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode);
-
 protected:
-	UPROPERTY()
-	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
-
 	TWeakPtr<SGraphNode_K2PostIt> OwnerWidget;
 
+	UEdGraphNode_K2PostIt* GetOwnerNode() const;
+	
 public:
 	virtual TSharedPtr<SWidget> Draw() const { return nullptr; };
 };
@@ -52,7 +50,7 @@ struct FK2PostIt_TextBlock : public FK2PostIt_BaseBlock
 	GENERATED_BODY()
 
 public:
-	FK2PostIt_TextBlock() : FK2PostIt_BaseBlock() {};
+	FK2PostIt_TextBlock() {};
 
 	FK2PostIt_TextBlock(const FString& InText) : Text(InText) {}
 
@@ -66,6 +64,9 @@ public:
 	FString& GetText() { return Text; }
 	
 	const FString& GetText() const { return Text; }
+
+protected:
+	FSlateColor GetForegroundColor() const;
 };
 
 // ================================================================================================

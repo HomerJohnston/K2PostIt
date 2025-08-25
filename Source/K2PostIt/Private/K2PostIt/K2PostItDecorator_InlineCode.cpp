@@ -15,11 +15,11 @@
 
 // ================================================================================================
 
-FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner)
+FK2PostItDecorator_InlineCode::FK2PostItDecorator_InlineCode(FString InName, TSharedPtr<SGraphNode_K2PostIt> InOwnerWidget)
 	: TextStyle(FK2PostItStyle::Get().GetWidgetStyle<FTextBlockStyle>(K2PostItStyles.TextStyle_Normal))
 {
 	RunName = InName;
-	Owner = InOwner;
+	OwnerWidget = InOwnerWidget;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 		{
 			FLinearColor Color = K2PostItColor::Noir;
 	
-			if (Owner.IsValid())
+			if (UEdGraphNode_K2PostIt* Owner = GetOwner())
 			{
 				Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
 			}
@@ -92,7 +92,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 		{
 			FLinearColor Color = K2PostItColor::White;
 	
-			if (Owner.IsValid())
+			if (UEdGraphNode_K2PostIt* Owner = GetOwner())
 			{
 				float Alpha = Color.A;
 				Color = Owner->CommentColor * 5;
@@ -111,7 +111,7 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 			{
 				FLinearColor Color = K2PostItColor::White;
 	
-				if (Owner.IsValid())
+				if (UEdGraphNode_K2PostIt* Owner = GetOwner())
 				{
 					float Lum = Owner->CommentColor.GetLuminance() * 1.2 + 0.15;
 					Color = FLinearColor(Lum, Lum, Lum, 1.0f);
@@ -130,6 +130,21 @@ TSharedPtr<SWidget> FK2PostItDecorator_InlineCode::CreateDecoratorWidget(const F
 			]
 		]
 	];
+}
+
+UEdGraphNode_K2PostIt* FK2PostItDecorator_InlineCode::GetOwner() const
+{
+	if (OwnerWidget.IsValid())
+	{
+		UEdGraphNode_K2PostIt* OwnerNode = OwnerWidget.Pin()->GetNodeObjAsK2PostIt();
+
+		if (IsValid(OwnerNode))
+		{
+			return OwnerNode;
+		}
+	}
+
+	return nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------

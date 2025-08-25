@@ -377,6 +377,7 @@ void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_Ba
 		CommentText = PendingCommentText;
 		bSetCommentTextRequestPending = false;
 		PendingCommentText = FText::GetEmpty();
+		
 		Blocks = NewBlocks;
 		bPreTransactionBlocksSet = false;
 		PreTransactionBlocks.Empty();
@@ -384,12 +385,6 @@ void UEdGraphNode_K2PostIt::OnParseComplete(TArray<TInstancedStruct<FK2PostIt_Ba
 	else // Just update the blocks for preview
 	{
 		Blocks = NewBlocks;
-	}
-	
-	for (TInstancedStruct<FK2PostIt_BaseBlock>& Block : PreTransactionBlocks)
-	{
-		FK2PostIt_BaseBlock& BlockInstance = Block.GetMutable<FK2PostIt_BaseBlock>();
-		BlockInstance.SetOwnerNode(this);
 	}
 	
 	ActiveParser = nullptr;

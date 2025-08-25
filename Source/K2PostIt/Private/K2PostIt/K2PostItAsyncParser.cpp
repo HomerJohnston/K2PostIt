@@ -27,29 +27,29 @@ void FK2PostIt_BaseBlock::SetParentWidget(TSharedPtr<SGraphNode_K2PostIt> GraphN
 
 // ------------------------------------------------------------------------------------------------
 
-void FK2PostIt_BaseBlock::SetOwnerNode(UEdGraphNode_K2PostIt* InOwnerNode)
+UEdGraphNode_K2PostIt* FK2PostIt_BaseBlock::GetOwnerNode() const
 {
-	Owner = InOwnerNode;
+	if (OwnerWidget.IsValid())
+	{
+		UEdGraphNode_K2PostIt* OwnerNode = OwnerWidget.Pin()->GetNodeObjAsK2PostIt();
+
+		if (IsValid(OwnerNode))
+		{
+			return OwnerNode;
+		}
+	}
+
+	return nullptr;
 }
 
 // ================================================================================================
 
 TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
-{
+{	
 	return SNew(SBorder)
 	.BorderImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.None))
 	.Padding(0)
-	.ForegroundColor_Lambda( [this] ()
-	{
-		FLinearColor Color = K2PostItColor::Noir;
-
-		if (Owner.IsValid())
-		{
-			Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
-		}
-		
-		return Color;
-	})
+	.ForegroundColor_Raw(this, &FK2PostIt_TextBlock::GetForegroundColor)
 	[
 		SNew(SRichTextBlock)
 		.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Normal)
@@ -65,9 +65,23 @@ TSharedPtr<SWidget> FK2PostIt_TextBlock::Draw() const
 			}
 			return -1.0f;
 		})
-		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
+		+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", OwnerWidget.Pin()))
 		+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
 	];
+}
+
+// ------------------------------------------------------------------------------------------------
+
+FSlateColor FK2PostIt_TextBlock::GetForegroundColor() const
+{
+	FLinearColor Color = K2PostItColor::Error;
+
+	if (UEdGraphNode_K2PostIt* OwnerNode = GetOwnerNode())
+	{
+		Color = K2PostItColor::GetNominalFontColor(OwnerNode->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
+	}
+		
+	return Color;
 }
 
 // ================================================================================================
@@ -83,7 +97,7 @@ TSharedPtr<SWidget> FK2PostIt_SeparatorBlock::Draw() const
 		.SeparatorImage(FK2PostItStyle::GetImageBrush(K2PostItBrushes.Separator))
 		.ColorAndOpacity_Lambda( [this] ()
 		{
-			if (Owner.IsValid())
+			if (UEdGraphNode_K2PostIt* Owner = GetOwnerNode())
 			{
 				if (Owner->CommentColor.GetLuminance() < K2PostIt::Constants::LuminanceDarkModeThreshold)
 				{
@@ -110,7 +124,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 		{
 			FLinearColor Color = K2PostItColor::Noir;
 	
-			if (Owner.IsValid())
+			if (UEdGraphNode_K2PostIt* Owner = GetOwnerNode())
 			{
 				Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::White, K2PostItColor::Noir);
 			}
@@ -121,7 +135,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 		{
 			FLinearColor Color = K2PostItColor::White;
 	
-			if (Owner.IsValid())
+			if (UEdGraphNode_K2PostIt* Owner = GetOwnerNode())
 			{
 				float Alpha = Color.A;
 				Color = Owner->CommentColor * K2PostIt::Constants::CodeBlock_BorderBackgroundColorMulti;
@@ -139,7 +153,7 @@ TSharedPtr<SWidget> FK2PostIt_CodeBlock::Draw() const
 			{
 				FLinearColor Color = K2PostItColor::White;
 	
-				if (Owner.IsValid())
+				if (UEdGraphNode_K2PostIt* Owner = GetOwnerNode())
 				{
 					float Lum = Owner->CommentColor.GetLuminance() + K2PostIt::Constants::CodeBlock_BorderBrighten;
 					Color = FLinearColor(Lum, Lum, Lum, 1.0f);
@@ -186,7 +200,7 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 	{
 		FLinearColor Color = K2PostItColor::Noir;
 
-		if (Owner.IsValid())
+		if (UEdGraphNode_K2PostIt* Owner = GetOwnerNode())
 		{
 			Color = K2PostItColor::GetNominalFontColor(Owner->CommentColor, K2PostItColor::DimWhite, K2PostItColor::DeepGray);
 		}
@@ -226,7 +240,7 @@ TSharedPtr<SWidget> FK2PostIt_BulletBlock::Draw() const
 				}
 				return -1.0f;
 			})
-			+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", Owner.Get()))
+			+ SRichTextBlock::Decorator(FK2PostItDecorator_InlineCode::Create("K2PostIt.Code", OwnerWidget.Pin()))
 			+ SRichTextBlock::Decorator(SRichTextBlock::HyperlinkDecorator("browser", FSlateHyperlinkRun::FOnClick::CreateStatic(&K2PostIt::OnBrowserLinkClicked)))
 		]
 	];

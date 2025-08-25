@@ -244,7 +244,7 @@ float SGraphNode_K2PostIt::GetWrapAt() const
 
 FSlateColor SGraphNode_K2PostIt::ForegroundColor_TitleBorder() const
 {
-	FLinearColor Color = K2PostItColor::Noir;
+	FLinearColor Color = K2PostItColor::Error;
 
 	const UEdGraphNode_K2PostIt* Owner = GetNodeObjAsK2PostIt();
 						
@@ -643,7 +643,7 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 										.BorderImage( FAppStyle::GetBrush("NoBorder") )
 										.ForegroundColor_Lambda( [this] ()
 										{
-											FLinearColor Color = K2PostItColor::Noir;
+											FLinearColor Color = K2PostItColor::Error;
 
 											UEdGraphNode_K2PostIt* Owner = GetNodeObjAsK2PostIt();
 											

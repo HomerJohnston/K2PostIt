@@ -4,18 +4,20 @@
 
 #include "Components/RichTextBlockDecorator.h"
 
+#include "K2PostIt/Widgets/SGraphNode_K2PostIt.h"
+
 class UEdGraphNode_K2PostIt;
 
 class K2POSTIT_API  FK2PostItDecorator_InlineCode : public ITextDecorator
 {
 public:
-	FK2PostItDecorator_InlineCode(FString InName, UEdGraphNode_K2PostIt* InOwner);
+	FK2PostItDecorator_InlineCode(FString InName, TSharedPtr<SGraphNode_K2PostIt> InOwnerWidget);
 	
 	bool Supports( const FTextRunParseResults& RunInfo, const FString& Text ) const override;
 
-	static TSharedRef<FK2PostItDecorator_InlineCode> Create(FString InName, UEdGraphNode_K2PostIt* InOwner)
+	static TSharedRef<FK2PostItDecorator_InlineCode> Create(FString InName, TSharedPtr<SGraphNode_K2PostIt> InOwnerWidget)
 	{
-		return MakeShareable(new FK2PostItDecorator_InlineCode(MoveTemp(InName), InOwner));
+		return MakeShareable(new FK2PostItDecorator_InlineCode(MoveTemp(InName), InOwnerWidget));
 	}
 
 	//TSharedRef<ISlateRun> Create(const TSharedRef<class FTextLayout>& TextLayout, const FTextRunParseResults& RunInfo, const FString& OriginalText, const TSharedRef<FString>& ModelText, const ISlateStyle* Style) override;
@@ -27,5 +29,7 @@ public:
 
 	const FTextBlockStyle& TextStyle;
 
-	TWeakObjectPtr<UEdGraphNode_K2PostIt> Owner;
+	TWeakPtr<SGraphNode_K2PostIt> OwnerWidget;
+
+	UEdGraphNode_K2PostIt* GetOwner() const;
 };

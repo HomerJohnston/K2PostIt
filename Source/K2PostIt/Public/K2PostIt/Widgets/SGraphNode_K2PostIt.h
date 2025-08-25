@@ -197,10 +197,12 @@ private:
 	
 	FReply OnClicked_QuickColorPaletteColor(const FLinearColor NewColor);
 
+public:
 	const UEdGraphNode_K2PostIt* GetNodeObjAsK2PostIt() const;
 	
 	UEdGraphNode_K2PostIt* GetNodeObjAsK2PostIt();
 
+private:
 	FReply OnClicked_EditIcon();
 
 	int32 WidgetIndex_CommentTextPane() const;
