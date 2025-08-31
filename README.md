@@ -15,9 +15,9 @@ https://github.com/user-attachments/assets/7e4edf37-3d19-4345-a091-53013b1a03dc
 - Preset quick-selectable colors, editable in project settings.
 
 ## Notes/Known Issues
-- Currently tested for UE 5.4+ only. It may be easy to make this plugin work on older UE5 versions (the main limit for older versions is due to TInstancedStruct usage).
+- Currently tested for UE 5.4+ only. It may be easy to make this plugin work on older UE5 versions (the main limit preventing older versions is due to TInstancedStruct usage instead of FInstancedStruct).
 - Not all markdown is supported. The preview video above shows currently available formatting.
-- The `inline code` markdown style cannot auto-wrap yet.
+- The `inline code` markdown style cannot auto-wrap inside of itself yet; you may occasionally need to split up `inline` `code` markdown manually into chunks so SRichTextBlock can wrap it.
   
 ### Normal display mode
 <img width="768" height="636" alt="image" src="https://github.com/user-attachments/assets/39c3a29e-85cc-45d2-b216-a3afbda98ee3" />
