@@ -19,6 +19,7 @@
 #include "Templates/SharedPointer.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
 
+class SMultiLineEditableTextBox;
 class SBox;
 class SMultiLineEditableText;
 class SWebBrowserView;
@@ -136,7 +137,7 @@ private:
 	/** The comment bubble widget (used when zoomed out) */
 	TSharedPtr<SCommentBubble> CommentBubble;
 
-	TSharedPtr<SMultiLineEditableText> CommentTextSource;
+	TSharedPtr<SMultiLineEditableTextBox> CommentTextSource;
 
 	bool bMouseClickEditingInterlock = false;
 

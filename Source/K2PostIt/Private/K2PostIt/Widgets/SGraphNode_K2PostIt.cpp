@@ -657,8 +657,9 @@ void SGraphNode_K2PostIt::UpdateGraphNode()
 										.VAlign(VAlign_Fill)
 										.Padding(7, 8, 7, 8)
 										[
-											SAssignNew(CommentTextSource, SMultiLineEditableText)
-											.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
+											SAssignNew(CommentTextSource, SMultiLineEditableTextBox)
+											//.TextStyle(FK2PostItStyle::Get(), K2PostItStyles.TextStyle_Editor)
+											.Style(FK2PostItStyle::Get(), K2PostItStyles.TextBoxStyle_CommentEditor)
 											.Text(this, &SGraphNode_K2PostIt::Text_CommentTextSource)
 											.OnTextChanged(this, &SGraphNode_K2PostIt::OnTextChanged_CommentTextSource)
 											.OnTextCommitted(this, &SGraphNode_K2PostIt::OnTextCommitted_CommentTextSource)
@@ -1098,12 +1099,23 @@ FSlateRect SGraphNode_K2PostIt::GetTitleRect() const
 
 EVisibility SGraphNode_K2PostIt::Visibility_EditButton() const
 {
+	// Hide the edit button while editing the comment title
 	if (InlineEditableText->HasAnyUserFocusOrFocusedDescendants())
 	{
 		return EVisibility::Collapsed;
 	}
 
-	return EVisibility::Visible;
+	if (bEditButtonClicked)
+	{
+		return EVisibility::Collapsed;
+	}
+
+	if (IsHovered())
+	{
+		return EVisibility::Visible;
+	}
+
+	return EVisibility::Collapsed;
 }
 
 // ------------------------------------------------------------------------------------------------

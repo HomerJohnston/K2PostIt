@@ -55,6 +55,7 @@ TSharedRef<ISlateRun> FK2PostItDecorator_InlineCode::Create(const TSharedRef<cla
 	TAttribute<int16> GetBaseline = TAttribute<int16>::CreateLambda([Font, ShadowOffsetY]()
 	{
 		const TSharedRef<FSlateFontMeasure> FontMeasure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+		
 		return FontMeasure->GetBaseline(Font) - ShadowOffsetY;
 	});
 	

@@ -3,7 +3,6 @@
 #include "K2PostIt/K2PostItStyle.h"
 
 #include "Framework/Application/SlateApplication.h"
-#include "ILiveCodingModule.h"
 #include "Interfaces/IPluginManager.h"
 #include "K2PostIt/K2PostItColor.h"
 #include "Modules/ModuleManager.h"
@@ -11,6 +10,7 @@
 #include "Styling/CoreStyle.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Styling/SlateTypes.h"
+#include "Styling/StyleColors.h"
 
 #define LOCTEXT_NAMESPACE "K2PostIt"
 
@@ -229,7 +229,7 @@ void FK2PostItStyle::SetupStyles()
 		//.SetNormal(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::Gray))
 		//.SetHovered(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::White))
 		//.SetPressed(CORE_BOX_BRUSH(K2POSTIT_COMMON_BRUSH, K2POSTIT_COMMON_MARGIN, K2PostItColor::DarkGray))
-		.SetNormalForeground(K2PostItColor::White_Trans)
+		.SetNormalForeground(K2PostItColor::White_SemiGlass)
 		.SetHoveredForeground(K2PostItColor::White)
 		.SetPressedForeground(K2PostItColor::Gray)
 		.SetPressedPadding(K2POSTIT_COMMON_PRESSED_PADDING)
@@ -372,20 +372,18 @@ void FK2PostItStyle::SetupStyles()
 	// ============================================================================================
 	// EDITABLE TEXT BLOCK STYLES
 	// ============================================================================================
-
-	/*
-	K2POSTIT_DEFINE_STYLE(FEditableTextBoxStyle, EditableTextBoxStyle_Dialogue, FEditableTextBoxStyle::GetDefault(),
-		.SetScrollBarStyle(ScrollBarStyle_DialogueBox) // This doesn't do dick, thanks Epic
-		.SetTextStyle(TextBlockStyle_DialogueText)
+	
+	K2POSTIT_DEFINE_STYLE(FEditableTextBoxStyle, TextBoxStyle_CommentEditor, FEditableTextBoxStyle::GetDefault(),
+		//.SetScrollBarStyle(ScrollBarStyle_DialogueBox) // This doesn't do dick, thanks Epic
+		.SetTextStyle(TextStyle_Editor)
 		.SetForegroundColor(FSlateColor::UseForeground())
 		.SetPadding(0)
 		.SetBackgroundImageNormal(CORE_BOX_BRUSH("Common/WhiteGroupBorder", FMargin(4.0f / 16.0f)))
 		.SetBackgroundImageHovered(CORE_BOX_BRUSH("Common/WhiteGroupBorder", FMargin(4.0f / 16.0f)))
 		.SetBackgroundImageFocused(CORE_BOX_BRUSH("Common/WhiteGroupBorder", FMargin(4.0f / 16.0f)))
 		.SetBackgroundImageReadOnly(CORE_BOX_BRUSH("Common/WhiteGroupBorder", FMargin(4.0f / 16.0f)))
-		.SetBackgroundColor(FStyleColors::Recessed)
+		.SetBackgroundColor(K2PostItColor::White_Glass)
 	);
-	*/
 	
 	// ============================================================================================
 	// PROGRESS BAR STYLES

@@ -57,6 +57,8 @@ struct FK2PostItStyles
 	FName TextStyle_CodeBlock;
 
 	FName K2PostItCommonHyperlink;
+
+	FName TextBoxStyle_CommentEditor;
 };
 
 extern FK2PostItStyles K2PostItStyles;
